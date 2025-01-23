@@ -36,7 +36,7 @@ public:
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("Password:", 5, 64, 2);
     tft.setTextColor(TFT_BLUE, TFT_BLACK);
-    tft.drawString("brianlough", 20, 82, 2);
+    tft.drawString("thesamu314", 20, 82, 2);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
     tft.drawString("If it doesn't AutoConnect, use this IP:", 5, 110, 2);
