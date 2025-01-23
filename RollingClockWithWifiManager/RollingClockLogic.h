@@ -5,7 +5,7 @@
 TFT_eSprite sprite = TFT_eSprite(&tft); // Sprite class
 
 int clockFont = 1;
-int clockSize = 6;
+int clockSize = 4;
 int clockDatum = TL_DATUM;
 uint16_t clockBackgroundColor = TFT_BLACK;
 uint16_t clockFontColor = TFT_YELLOW;
@@ -38,8 +38,8 @@ void SetupCYD()
 
 /*-------- Digits ----------*/
 #include "Digit.h"
-Digit *digs[6];
-int colons[2];
+Digit *digs[4];
+int colons[1];
 int timeY = 50;
 int ampm[2]; // X, Y of the AM or PM indicator
 bool ispm;
@@ -50,7 +50,7 @@ void CalculateDigitOffsets()
     int width = tft.width();
     int DigitWidth = tft.textWidth("8");
     int colonWidth = tft.textWidth(":");
-    int left = SHOW_AMPM ? 10 : (width - DigitWidth * 6 - colonWidth * 2) / 2;
+    int left = SHOW_AMPM ? 10 : (width - DigitWidth * 4 - colonWidth) / 2;
     digs[0]->SetXY(left, y);                      // HH
     digs[1]->SetXY(digs[0]->X() + DigitWidth, y); // HH
 
@@ -59,13 +59,40 @@ void CalculateDigitOffsets()
     digs[2]->SetXY(colons[0] + colonWidth, y); // MM
     digs[3]->SetXY(digs[2]->X() + DigitWidth, y);
 
-    colons[1] = digs[3]->X() + DigitWidth; // :
+    //colons[1] = digs[3]->X() + DigitWidth; // :
 
-    digs[4]->SetXY(colons[1] + colonWidth, y); // SS
-    digs[5]->SetXY(digs[4]->X() + DigitWidth, y);
+    //digs[4]->SetXY(colons[1] + colonWidth, y); // SS
+    //digs[5]->SetXY(digs[4]->X() + DigitWidth, y);
 
-    ampm[0] = digs[5]->X() + DigitWidth + 4;
+    ampm[0] = digs[3]->X() + DigitWidth + 4;
     ampm[1] = y - 2;
+
+    Serial.print("dig 1: (");
+    Serial.print(digs[0]->X());
+    Serial.print(", ");
+    Serial.print(digs[0]->Y());
+    Serial.println(")");
+
+    Serial.print("dig 2: (");
+    Serial.print(digs[1]->X());
+    Serial.print(", ");
+    Serial.print(digs[1]->Y());
+    Serial.println(")");
+
+    Serial.print("colon: ");
+    Serial.println(colons[0]);
+
+    Serial.print("dig 3: (");
+    Serial.print(digs[2]->X());
+    Serial.print(", ");
+    Serial.print(digs[2]->Y());
+    Serial.println(")");
+
+    Serial.print("dig 4: (");
+    Serial.print(digs[3]->X());
+    Serial.print(", ");
+    Serial.print(digs[3]->Y());
+    Serial.println(")");
 }
 
 void SetupDigits()
@@ -75,7 +102,7 @@ void SetupDigits()
     tft.setTextSize(clockSize);
     tft.setTextDatum(clockDatum);
 
-    for (size_t i = 0; i < 6; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         digs[i] = new Digit(0);
         digs[i]->Height(tft.fontHeight());
@@ -96,7 +123,7 @@ void DrawColons()
     tft.setTextSize(clockSize);
     tft.setTextDatum(clockDatum);
     tft.drawChar(':', colons[0], timeY);
-    tft.drawChar(':', colons[1], timeY);
+    //tft.drawChar(':', colons[1], timeY);
 }
 
 void DrawAmPm()
@@ -137,7 +164,7 @@ void DrawDigitsAtOnce()
     tft.setTextDatum(TL_DATUM);
     for (size_t f = 0; f <= digs[0]->Height(); f++) // For all animation frames...
     {
-        for (size_t di = 0; di < 6; di++) // for all Digits...
+        for (size_t di = 0; di < 4; di++) // for all Digits...
         {
             Digit *dig = digs[di];
             if (dig->Value() == dig->NewValue()) // If Digit is not changing...
@@ -160,7 +187,7 @@ void DrawDigitsAtOnce()
     }
 
     // Once all animations are done, then we can update all Digits to current new values.
-    for (size_t di = 0; di < 6; di++)
+    for (size_t di = 0; di < 4; di++)
     {
         Digit *dig = digs[di];
         dig->Value(dig->NewValue());
@@ -169,7 +196,7 @@ void DrawDigitsAtOnce()
 
 void DrawDigitsWithoutAnimation()
 {
-    for (size_t di = 0; di < 6; di++)
+    for (size_t di = 0; di < 4; di++)
     {
         Digit *dig = digs[di];
         dig->Value(dig->NewValue());
@@ -195,8 +222,8 @@ void ParseDigits()
     digs[1]->NewValue((SHOW_24HOUR ? hour(local) : hourFormat12(local)) % 10);
     digs[2]->NewValue(minute(local) / 10);
     digs[3]->NewValue(minute(local) % 10);
-    digs[4]->NewValue(second(local) / 10);
-    digs[5]->NewValue(second(local) % 10);
+    //digs[4]->NewValue(second(local) / 10);
+    //digs[5]->NewValue(second(local) % 10);
     ispm = isPM(local);
 }
 
