@@ -23,6 +23,7 @@
 
 #include "genericBaseProject.h"
 #include "RollingClockLogic.h"
+#include "bibleVerse.h"
 
 void setup()
 {
@@ -43,10 +44,15 @@ void loop()
     if (first)
     {
         drawRollingClock();
+        drawWeekVerse()
         first = false;
     }
     else if (minuteChanged())
     {
         drawRollingClock();
+    }
+    else if (weekChanged())
+    {
+        drawWeekVerse()
     }
 }
