@@ -40,9 +40,13 @@ void loop()
 {
     baseProjectLoop();
 
-    if (first || secondChanged())
+    if (first)
     {
         drawRollingClock();
         first = false;
+    }
+    else if (minuteChanged())
+    {
+        drawRollingClock();
     }
 }

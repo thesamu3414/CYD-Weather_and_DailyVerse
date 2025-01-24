@@ -16,6 +16,8 @@ bool SHOW_AMPM = true;
 
 bool NOT_US_DATE = true;
 
+uint8_t wDay = 0; 
+
 void SetupCYD()
 {
     Serial.println("SetupCYD");
@@ -36,11 +38,21 @@ void SetupCYD()
     sprite.setTextDatum(clockDatum);
 }
 
+bool weekchanged()
+{
+    uint8_t new_wDay = myTZ.weekday();// day of week, sunday is day 1
+
+    if ( (new_wDay != wDay) && (new_wDay == 1) )
+        return true;
+    
+    return false;
+}
+
 /*-------- Digits ----------*/
 #include "Digit.h"
 Digit *digs[4];
 int colons[1];
-int timeY = 50;
+int timeY = 25;
 int ampm[2]; // X, Y of the AM or PM indicator
 bool ispm;
 
@@ -50,7 +62,7 @@ void CalculateDigitOffsets()
     int width = tft.width();
     int DigitWidth = tft.textWidth("8");
     int colonWidth = tft.textWidth(":");
-    int left = SHOW_AMPM ? 10 : (width - DigitWidth * 4 - colonWidth) / 2;
+    int left = SHOW_AMPM ? 10 : (width - DigitWidth * 8.5) / 2;
     digs[0]->SetXY(left, y);                      // HH
     digs[1]->SetXY(digs[0]->X() + DigitWidth, y); // HH
 
@@ -67,6 +79,8 @@ void CalculateDigitOffsets()
     ampm[0] = digs[3]->X() + DigitWidth + 4;
     ampm[1] = y - 2;
 
+    // For debugging
+    /*
     Serial.print("dig 1: (");
     Serial.print(digs[0]->X());
     Serial.print(", ");
@@ -92,7 +106,7 @@ void CalculateDigitOffsets()
     Serial.print(digs[3]->X());
     Serial.print(", ");
     Serial.print(digs[3]->Y());
-    Serial.println(")");
+    Serial.println(")");*/
 }
 
 void SetupDigits()
@@ -233,34 +247,62 @@ void DrawDate()
     time_t local = myTZ.now();
     int dd = day(local);
     int mth = month(local);
-    int yr = year(local);
+    int yr = year(local) - 2000; //save last 2 digits
+
+    int width = tft.width();
+    int DigitWidth = tft.textWidth("8");
+    int left = (width - DigitWidth * 8) / 2; // "xx/xx/xx" -> 8 digits
 
     if (dd != prevDay)
     {
         prevDay = dd;
-        tft.setTextDatum(BC_DATUM);
+        tft.setTextDatum(TL_DATUM);
         char buffer[50];
         if (NOT_US_DATE)
         {
-            sprintf(buffer, "%02d/%02d/%d", dd, mth, yr);
+            sprintf(buffer, "%02d/%02d/%02d", dd, mth, yr);
         }
         else
         {
             // MURICA!!
-            sprintf(buffer, "%02d/%02d/%d", mth, dd, yr);
+            sprintf(buffer, "%02d/%02d/%02d", mth, dd, yr);
         }
 
         tft.setTextSize(4);
         int h = tft.fontHeight();
-        tft.fillRect(0, 210 - h, 320, h, TFT_BLACK);
+        tft.fillRect(0, timeY + h, 320, h, TFT_BLACK);
 
-        tft.drawString(buffer, 320 / 2, 210);
+        // debug
+        /*
+        Serial.print("Rect x: ");
+        Serial.print(0);
+        Serial.print(", y: ");
+        Serial.print(timeY + h);
+        Serial.print(", w: ");
+        Serial.print(320);
+        Serial.print(", h: ");
+        Serial.println(h);
+        */
+
+        tft.drawString(buffer, left, timeY + 1 + h);
 
         int dow = weekday(local);
-        String dayNames[] = {"", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-        tft.setTextSize(4);
-        tft.fillRect(0, 170 - h, 320, h, TFT_BLACK);
-        tft.drawString(dayNames[dow], 320 / 2, 170);
+        String dayNames[] = {"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        tft.setTextSize(3);
+        tft.fillRect(left + DigitWidth * 5.5, timeY, DigitWidth * 3, h, TFT_BLACK);
+        tft.drawString(dayNames[dow], left + DigitWidth * 5.5, timeY + 5);
+
+        // debug
+        /*
+        Serial.print("Rect2 x: ");
+        Serial.print(left + DigitWidth * 5.5);
+        Serial.print(", y: ");
+        Serial.print(timeY);
+        Serial.print(", w: ");
+        Serial.print(DigitWidth * 3);
+        Serial.print(", h: ");
+        Serial.println(h);
+        */
     }
 }
 
