@@ -38,7 +38,7 @@ void SetupCYD()
     sprite.setTextDatum(clockDatum);
 }
 
-bool weekChanged()
+bool dayChanged()
 {
     uint8_t new_wDay = myTZ.weekday();// day of week, sunday is day 1
     
@@ -51,10 +51,7 @@ bool weekChanged()
     {
         wDay = new_wDay;
         Serial.print("wDay changed ");
-        if (new_wDay == 1)
-        {
-            return true;
-        }
+        return true;
     }
     return false;
 }

@@ -85,7 +85,7 @@ void extractVerse(String api_response)
   Serial.println(" bytes");
 }
 
-void getWeekVerse()
+void getdailyVerse()
 {
     // Make an HTTP GET request
   if (WiFi.status() == WL_CONNECTED) { // Check if connected to Wi-Fi
@@ -171,7 +171,7 @@ void drawVerse()
   // calculate new vertical margin:
   //    new_vert_margin = ((screen_heigth - textY) - (charHeigth + 1 ) * lines )/2
   textY += ( (height - textY) - (charHeigth + 1) * (lines + 1) ) / 2;
-  
+
   // draw sentences in different lines in the tft
   int startIndex = 0;
   int spaceIndex;
@@ -211,8 +211,8 @@ void drawVerse()
   tft.drawString(bookChap, width - margin, textY + (charHeigth + 1) * (lines + 1) + 3);
 }
 
-void drawWeekVerse()
+void drawdailyVerse()
 {
-    getWeekVerse();
+    getdailyVerse();
     drawVerse();
 }

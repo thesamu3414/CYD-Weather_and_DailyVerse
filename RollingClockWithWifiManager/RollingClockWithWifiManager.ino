@@ -46,7 +46,7 @@ void loop()
     {
         Serial.println("Entering first time");
         drawRollingClock();
-        drawWeekVerse();
+        drawdailyVerse();
 
         wDay =  myTZ.weekday();
         first = false;
@@ -56,10 +56,10 @@ void loop()
         Serial.println("Minute change");
         drawRollingClock();
     }
-    else if (weekChanged())
+    else if (dayChanged())
     {
-        Serial.println("Week change");
-        drawWeekVerse();
+        Serial.println("Day change");
+        drawdailyVerse();
     }
 
     Serial.print(" outside - Free heap memory: ");
