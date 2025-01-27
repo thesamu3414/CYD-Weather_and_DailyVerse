@@ -41,10 +41,21 @@ void SetupCYD()
 bool weekChanged()
 {
     uint8_t new_wDay = myTZ.weekday();// day of week, sunday is day 1
-
-    if ( (new_wDay != wDay) && (new_wDay == 1) )
-        return true;
     
+    Serial.print("new_wDay: ");
+    Serial.print(new_wDay);
+    Serial.print(", wDay: ");
+    Serial.println(wDay);
+
+    if ( (new_wDay != wDay) )
+    {
+        wDay = new_wDay;
+        Serial.print("wDay changed ");
+        if (new_wDay == 1)
+        {
+            return true;
+        }
+    }
     return false;
 }
 

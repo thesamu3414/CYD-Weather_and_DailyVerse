@@ -21,6 +21,7 @@
     Twitter: https://twitter.com/witnessmenow
  *******************************************************************/
 
+#include "token.h"
 #include "genericBaseProject.h"
 #include "RollingClockLogic.h"
 #include "bibleVerse.h"
@@ -43,16 +44,26 @@ void loop()
 
     if (first)
     {
+        Serial.println("Entering first time");
         drawRollingClock();
-        drawWeekVerse()
+        drawWeekVerse();
+
+        wDay =  myTZ.weekday();
         first = false;
     }
     else if (minuteChanged())
     {
+        Serial.println("Minute change");
         drawRollingClock();
     }
     else if (weekChanged())
     {
-        drawWeekVerse()
+        Serial.println("Week change");
+        drawWeekVerse();
     }
+
+    Serial.print(" outside - Free heap memory: ");
+    Serial.print(ESP.getFreeHeap());
+    Serial.println(" bytes");
+    delay(1000);
 }
