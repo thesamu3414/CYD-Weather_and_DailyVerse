@@ -5,7 +5,7 @@
 TFT_eSprite sprite = TFT_eSprite(&tft); // Sprite class
 
 int clockFont = 1;
-int clockSize = 6;
+int clockSize = 4;
 int clockDatum = TL_DATUM;
 uint16_t clockBackgroundColor = TFT_BLACK;
 uint16_t clockFontColor = TFT_YELLOW;
@@ -15,6 +15,8 @@ bool SHOW_24HOUR = false;
 bool SHOW_AMPM = true;
 
 bool NOT_US_DATE = true;
+
+uint8_t wDay = 0; 
 
 void SetupCYD()
 {
@@ -36,11 +38,32 @@ void SetupCYD()
     sprite.setTextDatum(clockDatum);
 }
 
+bool weekChanged()
+{
+    uint8_t new_wDay = myTZ.weekday();// day of week, sunday is day 1
+    
+    Serial.print("new_wDay: ");
+    Serial.print(new_wDay);
+    Serial.print(", wDay: ");
+    Serial.println(wDay);
+
+    if ( (new_wDay != wDay) )
+    {
+        wDay = new_wDay;
+        Serial.print("wDay changed ");
+        if (new_wDay == 1)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 /*-------- Digits ----------*/
 #include "Digit.h"
-Digit *digs[6];
-int colons[2];
-int timeY = 50;
+Digit *digs[4];
+int colons[1];
+int timeY = 25;
 int ampm[2]; // X, Y of the AM or PM indicator
 bool ispm;
 
@@ -50,7 +73,7 @@ void CalculateDigitOffsets()
     int width = tft.width();
     int DigitWidth = tft.textWidth("8");
     int colonWidth = tft.textWidth(":");
-    int left = SHOW_AMPM ? 10 : (width - DigitWidth * 6 - colonWidth * 2) / 2;
+    int left = SHOW_AMPM ? 10 : (width - DigitWidth * 8.5) / 2;
     digs[0]->SetXY(left, y);                      // HH
     digs[1]->SetXY(digs[0]->X() + DigitWidth, y); // HH
 
@@ -59,13 +82,42 @@ void CalculateDigitOffsets()
     digs[2]->SetXY(colons[0] + colonWidth, y); // MM
     digs[3]->SetXY(digs[2]->X() + DigitWidth, y);
 
-    colons[1] = digs[3]->X() + DigitWidth; // :
+    //colons[1] = digs[3]->X() + DigitWidth; // :
 
-    digs[4]->SetXY(colons[1] + colonWidth, y); // SS
-    digs[5]->SetXY(digs[4]->X() + DigitWidth, y);
+    //digs[4]->SetXY(colons[1] + colonWidth, y); // SS
+    //digs[5]->SetXY(digs[4]->X() + DigitWidth, y);
 
-    ampm[0] = digs[5]->X() + DigitWidth + 4;
+    ampm[0] = digs[3]->X() + DigitWidth + 4;
     ampm[1] = y - 2;
+
+    // For debugging
+    /*
+    Serial.print("dig 1: (");
+    Serial.print(digs[0]->X());
+    Serial.print(", ");
+    Serial.print(digs[0]->Y());
+    Serial.println(")");
+
+    Serial.print("dig 2: (");
+    Serial.print(digs[1]->X());
+    Serial.print(", ");
+    Serial.print(digs[1]->Y());
+    Serial.println(")");
+
+    Serial.print("colon: ");
+    Serial.println(colons[0]);
+
+    Serial.print("dig 3: (");
+    Serial.print(digs[2]->X());
+    Serial.print(", ");
+    Serial.print(digs[2]->Y());
+    Serial.println(")");
+
+    Serial.print("dig 4: (");
+    Serial.print(digs[3]->X());
+    Serial.print(", ");
+    Serial.print(digs[3]->Y());
+    Serial.println(")");*/
 }
 
 void SetupDigits()
@@ -75,7 +127,7 @@ void SetupDigits()
     tft.setTextSize(clockSize);
     tft.setTextDatum(clockDatum);
 
-    for (size_t i = 0; i < 6; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         digs[i] = new Digit(0);
         digs[i]->Height(tft.fontHeight());
@@ -96,7 +148,7 @@ void DrawColons()
     tft.setTextSize(clockSize);
     tft.setTextDatum(clockDatum);
     tft.drawChar(':', colons[0], timeY);
-    tft.drawChar(':', colons[1], timeY);
+    //tft.drawChar(':', colons[1], timeY);
 }
 
 void DrawAmPm()
@@ -137,7 +189,7 @@ void DrawDigitsAtOnce()
     tft.setTextDatum(TL_DATUM);
     for (size_t f = 0; f <= digs[0]->Height(); f++) // For all animation frames...
     {
-        for (size_t di = 0; di < 6; di++) // for all Digits...
+        for (size_t di = 0; di < 4; di++) // for all Digits...
         {
             Digit *dig = digs[di];
             if (dig->Value() == dig->NewValue()) // If Digit is not changing...
@@ -160,7 +212,7 @@ void DrawDigitsAtOnce()
     }
 
     // Once all animations are done, then we can update all Digits to current new values.
-    for (size_t di = 0; di < 6; di++)
+    for (size_t di = 0; di < 4; di++)
     {
         Digit *dig = digs[di];
         dig->Value(dig->NewValue());
@@ -169,7 +221,7 @@ void DrawDigitsAtOnce()
 
 void DrawDigitsWithoutAnimation()
 {
-    for (size_t di = 0; di < 6; di++)
+    for (size_t di = 0; di < 4; di++)
     {
         Digit *dig = digs[di];
         dig->Value(dig->NewValue());
@@ -195,8 +247,8 @@ void ParseDigits()
     digs[1]->NewValue((SHOW_24HOUR ? hour(local) : hourFormat12(local)) % 10);
     digs[2]->NewValue(minute(local) / 10);
     digs[3]->NewValue(minute(local) % 10);
-    digs[4]->NewValue(second(local) / 10);
-    digs[5]->NewValue(second(local) % 10);
+    //digs[4]->NewValue(second(local) / 10);
+    //digs[5]->NewValue(second(local) % 10);
     ispm = isPM(local);
 }
 
@@ -206,34 +258,62 @@ void DrawDate()
     time_t local = myTZ.now();
     int dd = day(local);
     int mth = month(local);
-    int yr = year(local);
+    int yr = year(local) - 2000; //save last 2 digits
+
+    int width = tft.width();
+    int DigitWidth = tft.textWidth("8");
+    int left = (width - DigitWidth * 8) / 2; // "xx/xx/xx" -> 8 digits
 
     if (dd != prevDay)
     {
         prevDay = dd;
-        tft.setTextDatum(BC_DATUM);
+        tft.setTextDatum(TL_DATUM);
         char buffer[50];
         if (NOT_US_DATE)
         {
-            sprintf(buffer, "%02d/%02d/%d", dd, mth, yr);
+            sprintf(buffer, "%02d/%02d/%02d", dd, mth, yr);
         }
         else
         {
             // MURICA!!
-            sprintf(buffer, "%02d/%02d/%d", mth, dd, yr);
+            sprintf(buffer, "%02d/%02d/%02d", mth, dd, yr);
         }
 
         tft.setTextSize(4);
         int h = tft.fontHeight();
-        tft.fillRect(0, 210 - h, 320, h, TFT_BLACK);
+        tft.fillRect(0, timeY + h, 320, h, TFT_BLACK);
 
-        tft.drawString(buffer, 320 / 2, 210);
+        // debug
+        /*
+        Serial.print("Rect x: ");
+        Serial.print(0);
+        Serial.print(", y: ");
+        Serial.print(timeY + h);
+        Serial.print(", w: ");
+        Serial.print(320);
+        Serial.print(", h: ");
+        Serial.println(h);
+        */
+
+        tft.drawString(buffer, left, timeY + 1 + h);
 
         int dow = weekday(local);
-        String dayNames[] = {"", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-        tft.setTextSize(4);
-        tft.fillRect(0, 170 - h, 320, h, TFT_BLACK);
-        tft.drawString(dayNames[dow], 320 / 2, 170);
+        String dayNames[] = {"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        tft.setTextSize(3);
+        tft.fillRect(left + DigitWidth * 5.5, timeY, DigitWidth * 3, h, TFT_BLACK);
+        tft.drawString(dayNames[dow], left + DigitWidth * 5.5, timeY + 5);
+
+        // debug
+        /*
+        Serial.print("Rect2 x: ");
+        Serial.print(left + DigitWidth * 5.5);
+        Serial.print(", y: ");
+        Serial.print(timeY);
+        Serial.print(", w: ");
+        Serial.print(DigitWidth * 3);
+        Serial.print(", h: ");
+        Serial.println(h);
+        */
     }
 }
 

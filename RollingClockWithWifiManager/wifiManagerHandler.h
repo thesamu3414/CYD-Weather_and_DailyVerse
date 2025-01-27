@@ -61,7 +61,7 @@ void setupWiFiManager(bool forceConfig, ProjectConfig config, ProjectDisplay *th
   {
     // IF we forced config this time, lets stop the double reset so it doesn't get stuck in a loop
     drd->stop();
-    if (!wm.startConfigPortal("esp32Project", "brianlough"))
+    if (!wm.startConfigPortal("esp32Project", "thesamu3414"))
     {
       Serial.println("failed to connect and hit timeout");
       delay(3000);
@@ -72,7 +72,7 @@ void setupWiFiManager(bool forceConfig, ProjectConfig config, ProjectDisplay *th
   }
   else
   {
-    if (!wm.autoConnect("esp32Project", "brianlough"))
+    if (!wm.autoConnect("", "thesamu3414"))
     {
       Serial.println("failed to connect and hit timeout");
       delay(3000);

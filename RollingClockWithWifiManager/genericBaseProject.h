@@ -101,12 +101,12 @@ void baseProjectSetup()
     }
 
     // While Wifi is not connected it will not progress past here
-    setupWiFiManager(forceConfig, projectConfig, projectDisplay);
+    // setupWiFiManager(forceConfig, projectConfig, projectDisplay);
 
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
-    // WiFi.mode(WIFI_STA);
-    // WiFi.begin(ssid, password);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssidDIGI, passwDIGI);
 
     while (WiFi.status() != WL_CONNECTED)
     {
