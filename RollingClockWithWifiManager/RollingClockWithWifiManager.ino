@@ -37,6 +37,7 @@ void setup()
 }
 
 bool first = true;
+int apiRequests = 0;
 
 void loop()
 {
@@ -50,6 +51,8 @@ void loop()
 
         wDay =  myTZ.weekday();
         first = false;
+        apiRequests += 1;
+        drawNumbApiRequests(apiRequests);
     }
     else if (minuteChanged())
     {
@@ -59,7 +62,9 @@ void loop()
     else if (dayChanged())
     {
         Serial.println("Day change");
+        apiRequests += 1;
         drawdailyVerse();
+        drawNumbApiRequests(apiRequests);
     }
 
     Serial.print(" outside - Free heap memory: ");

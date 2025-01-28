@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 
 // for debugging porpuses
-//String ex_response = "{\"success\": {\"total\": 1},\"contents\": {\"id\": \"Rj5RwO0mA6_tOSPJQFMagQeF\",\"testament\": \"Old Testament\",\"book\": \"Micah\",\"bookid\": 33,\"chapter\": 2,\"verse\": \"And they covet fields, and take them by violence; and houses, and take them away: so they oppress a man and his house, even a man and his heritage.\",\"title\": \"Bible Verse of the day\",\"category\": \"vod\",\"date\": \"2025-01-26\"},\"copyright\": {\"url\": \"https://quotes.rest\",\"year\": \"2025\"}}";
+String ex_response = "{\"success\": {\"total\": 1},\"contents\": {\"id\": \"Rj5RwO0mA6_tOSPJQFMagQeF\",\"testament\": \"Old Testament\",\"book\": \"Micah\",\"bookid\": 33,\"chapter\": 2,\"verse\": \"And they covet fields, and take them by violence; and houses, and take them away: so they oppress a man and his house, even a man and his heritage.\",\"title\": \"Bible Verse of the day\",\"category\": \"vod\",\"date\": \"2025-01-26\"},\"copyright\": {\"url\": \"https://quotes.rest\",\"year\": \"2025\"}}";
 
 String verse, book;
 int chapter;
@@ -104,8 +104,8 @@ void getdailyVerse()
     Serial.println(String("Bearer ") + apiToken);
 
     // uncomment this line and the ex_response on the beggining of the file for debugging purposes
-    //extractVerse(ex_response);
-    ///*
+    extractVerse(ex_response);
+    /*
     int httpCode = http.GET(); // Perform GET request
 
     // Check HTTP response code
@@ -144,9 +144,10 @@ void drawVerse()
   tft.setTextDatum(TL_DATUM);
   tft.setTextFont(2);
   tft.setTextSize(1);
+  tft.setTextColor(TFT_WHITE);
   int charWidth = tft.textWidth("B");
   int charHeigth = tft.fontHeight();
-  int textY = 80;
+  int textY = 70;
 
   // the chunksize will be the space left for the text divided by the width of a 
   // character:
@@ -176,7 +177,7 @@ void drawVerse()
   int startIndex = 0;
   int spaceIndex;
 
-  tft.fillRect(0, 90, 320, height - 90, TFT_BLACK);
+  tft.fillRect(0, 90, 320, height - 110, TFT_BLACK);
 
   for (int i = 0; i<=lines; i++)
   {
@@ -195,7 +196,7 @@ void drawVerse()
     tft.drawString(line, margin, textY + (charHeigth + 1) * i);
   }
 
-  //tft.drawString("+---+", 150, 80);
+  //tft.drawString("+---+", 150, 70);
 
 
   // ******** BOOK and CHAPTER
@@ -213,8 +214,20 @@ void drawVerse()
   tft.drawString(bookChap, width - margin, textY + (charHeigth + 1) * (lines + 1) + 3);
 }
 
+void drawNumbApiRequests(int numReqsts)
+{
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextFont(2);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_DARKGREY);
+
+  char buffer[50];
+
+  sprintf(buffer, "Api Requests: %d", numReqsts);
+  tft.drawString(buffer, 0, 240 - tft.fontHeight());
+}
 void drawdailyVerse()
 {
-    getdailyVerse();
-    drawVerse();
+  getdailyVerse();
+  drawVerse();
 }
