@@ -176,6 +176,8 @@ void drawVerse()
   int startIndex = 0;
   int spaceIndex;
 
+  tft.fillRect(0, 90, 320, height - 90, TFT_BLACK);
+
   for (int i = 0; i<=lines; i++)
   {
     spaceIndex = verseInLines.indexOf('\n', startIndex);
