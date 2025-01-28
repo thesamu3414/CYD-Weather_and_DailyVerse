@@ -3,7 +3,9 @@
 #include <ArduinoJson.h>
 
 // for debugging porpuses
-String ex_response = "{\"success\": {\"total\": 1},\"contents\": {\"id\": \"Rj5RwO0mA6_tOSPJQFMagQeF\",\"testament\": \"Old Testament\",\"book\": \"Micah\",\"bookid\": 33,\"chapter\": 2,\"verse\": \"And they covet fields, and take them by violence; and houses, and take them away: so they oppress a man and his house, even a man and his heritage.\",\"title\": \"Bible Verse of the day\",\"category\": \"vod\",\"date\": \"2025-01-26\"},\"copyright\": {\"url\": \"https://quotes.rest\",\"year\": \"2025\"}}";
+String ex_response = "{\"success\":{\"total\":1},\"contents\":{\"id\":\"U24_S1Qxu1J87ke9Y3kSrweF\",\"testament\":\"Old Testament\",\"book\":\"Micah\",\"bookid\":33,\"chapter\":2,\"verse\":\"In that day shall one take up a parable against you, and lament with a doleful lamentation, and say, We be utterly spoiled: he has changed the portion of my people: how has he removed it from me! turning away he has divided our fields.\",\"title\":\"Bible Verse of the day\",\"category\":\"vod\",\"date\":\"2025-01-28\"},\"copyright\":{\"url\":\"https://quotes.rest\",\"year\":\"2025\"}}";
+
+                    //"{\"success\": {\"total\": 1},\"contents\": {\"id\": \"Rj5RwO0mA6_tOSPJQFMagQeF\",\"testament\": \"Old Testament\",\"book\": \"Micah\",\"bookid\": 33,\"chapter\": 2,\"verse\": \"And they covet fields, and take them by violence; and houses, and take them away: so they oppress a man and his house, even a man and his heritage.\",\"title\": \"Bible Verse of the day\",\"category\": \"vod\",\"date\": \"2025-01-26\"},\"copyright\": {\"url\": \"https://quotes.rest\",\"year\": \"2025\"}}";
 
 String verse, book;
 int chapter;
@@ -64,6 +66,30 @@ void splitStringIntoChunks(const String &inputString, int chunkSize, char* buffe
 */
 }
 
+// Draw the unexpected HTTP Code in the bottom right corner
+// of the TFT.
+void drawUnexpectedCode(int unexpectedCode)
+{
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextFont(2);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_DARKGREY);
+
+  char buffer[50];
+  memset(buffer, 0, sizeof(buffer));
+
+  tft.fillRect(160,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
+
+  sprintf(buffer, "HttpCode: %d", unexpectedCode);
+  tft.drawString(buffer, tft.width() - tft.textWidth("B") * strlen(buffer), 240 - tft.fontHeight());
+
+  Serial.println("Unexpected Code.");
+  Serial.print("---Buffer lenght: ");
+  Serial.print(strlen(buffer));
+  Serial.print(", X: ");
+  Serial.println(tft.width() - tft.textWidth("B") * strlen(buffer));
+}
+
 void extractVerse(String api_response)
 {
   StaticJsonDocument<1024> doc;
@@ -104,9 +130,11 @@ void getdailyVerse()
     Serial.println(String("Bearer ") + apiToken);
 
     // uncomment this line and the ex_response on the beggining of the file for debugging purposes
-    extractVerse(ex_response);
-    /*
+    //extractVerse(ex_response);
+    ///*
     int httpCode = http.GET(); // Perform GET request
+
+    //int httpCode = 200;
 
     // Check HTTP response code
     if (httpCode > 0) {
@@ -118,11 +146,25 @@ void getdailyVerse()
         Serial.println(payload); // Print the response
 
         extractVerse(payload);
+        //extractVerse(ex_response); for debuggin
+
+        // fill the right half of the bottom of the txt withblack background
+        // to eliminate the htpp code drawing that is only for error codes
+        tft.setTextFont(2);
+        tft.setTextSize(1);
+        tft.fillRect(160,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
+        Serial.println("Filling BOTTOM RIGHT with black.");
 
       } else {
         Serial.printf("Unexpected HTTP code: %d\n", httpCode);
         String response = http.getString(); // Print server's response
         Serial.println(response);
+
+        // draw example verse
+        extractVerse(ex_response);
+
+        // draw unexpected code in display
+        drawUnexpectedCode(httpCode);
       }
            
     } else {
@@ -157,7 +199,8 @@ void drawVerse()
 
   int chunkSize = (width - margin * 2) / charWidth;
 
-  char buffer[200];
+  char buffer[400];
+  memset(buffer, 0, sizeof(buffer));
   int lines = 0;
   int maxLineLen = 0;
   splitStringIntoChunks(verse, chunkSize, buffer, lines, maxLineLen);
@@ -190,7 +233,7 @@ void drawVerse()
 
     // Extract line
     String line = verseInLines.substring(startIndex, spaceIndex);  
-
+    Serial.println(line);
     startIndex = spaceIndex + 1;  // Move past the space or to the end of the string
 
     tft.drawString(line, margin, textY + (charHeigth + 1) * i);
@@ -198,34 +241,40 @@ void drawVerse()
 
   //tft.drawString("+---+", 150, 70);
 
-
   // ******** BOOK and CHAPTER
   tft.setTextDatum(TR_DATUM);
   tft.setTextFont(1);
   tft.setTextSize(1);
 
   char bookChap[50];
+  memset(bookChap, 0, sizeof(bookChap));
 
   sprintf(bookChap, "%s, %d.", book, chapter);
-
 
   //tft.fillRect(0, height / 2, 320, charHeigth * 2, TFT_SKYBLUE);
 
   tft.drawString(bookChap, width - margin, textY + (charHeigth + 1) * (lines + 1) + 3);
 }
 
+// draw the number of requests done to the bible api
+// in the bottom left corner of the tft. This is for
+// monitoring purposes.
 void drawNumbApiRequests(int numReqsts)
 {
   tft.setTextDatum(TL_DATUM);
   tft.setTextFont(2);
   tft.setTextSize(1);
   tft.setTextColor(TFT_DARKGREY);
-
+  
   char buffer[50];
+  memset(buffer, 0, sizeof(buffer));
+  // fill the half of the bottom of the txt withblack background
+  tft.fillRect(0,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
 
   sprintf(buffer, "Api Requests: %d", numReqsts);
   tft.drawString(buffer, 0, 240 - tft.fontHeight());
 }
+
 void drawdailyVerse()
 {
   getdailyVerse();

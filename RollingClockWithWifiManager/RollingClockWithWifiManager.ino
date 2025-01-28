@@ -67,8 +67,9 @@ void loop()
         drawNumbApiRequests(apiRequests);
     }
 
+    /*
     Serial.print(" outside - Free heap memory: ");
     Serial.print(ESP.getFreeHeap());
-    Serial.println(" bytes");
+    Serial.println(" bytes");*/
     delay(1000);
 }
