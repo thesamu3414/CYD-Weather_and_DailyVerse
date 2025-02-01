@@ -130,8 +130,8 @@ void getdailyVerse()
     Serial.println(String("Bearer ") + apiToken);
 
     // uncomment this line and the ex_response on the beggining of the file for debugging purposes
-    //extractVerse(ex_response);
-    ///*
+    extractVerse(ex_response);
+    /*
     int httpCode = http.GET(); // Perform GET request
 
     //int httpCode = 200;

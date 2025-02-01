@@ -7,6 +7,11 @@
 // ----------------------------
 // Standard Libraries
 // ----------------------------
+#include <SPI.h>
+// A low-level library for SPI communication. It provides basic functions 
+// to send and receive data over SPI but does not handle graphics or 
+// display-specific tasks.
+
 #include <WiFi.h>
 
 #include <FS.h>
@@ -53,6 +58,8 @@
 
 #include "cheapYellowLCD.h"
 
+#include "touch.h"
+
 // Number of seconds after reset during which a
 // subseqent reset will be considered a double reset.
 #define DRD_TIMEOUT 10
@@ -92,6 +99,9 @@ void baseProjectSetup()
         while (1)
             yield(); // Stay here twiddling thumbs waiting
     }
+
+    startTouchScreen();
+
     Serial.println("\r\nInitialisation done.");
 
     if (!projectConfig.fetchConfigFile())

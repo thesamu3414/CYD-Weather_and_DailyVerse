@@ -39,9 +39,16 @@ void setup()
 bool first = true;
 int apiRequests = 0;
 
+unsigned long lastUpdateTime = 0;
+const int updateInterval = 1000;
+
 void loop()
 {
     baseProjectLoop();
+
+    checkAndDrawTouch();
+
+    unsigned long currentTime = millis();
 
     if (first)
     {
@@ -54,22 +61,23 @@ void loop()
         apiRequests += 1;
         drawNumbApiRequests(apiRequests);
     }
-    else if (minuteChanged())
+    else if (currentTime - lastUpdateTime >= updateInterval)
     {
-        Serial.println("Minute change");
-        drawRollingClock();
+        if (minuteChanged())
+        {
+            Serial.println("Minute change");
+            drawRollingClock();
+        }
+        else if (dayChanged())
+        {
+            Serial.println("Day change");
+            apiRequests += 1;
+            drawdailyVerse();
+            drawNumbApiRequests(apiRequests);
+        }
     }
-    else if (dayChanged())
-    {
-        Serial.println("Day change");
-        apiRequests += 1;
-        drawdailyVerse();
-        drawNumbApiRequests(apiRequests);
-    }
-
     /*
     Serial.print(" outside - Free heap memory: ");
     Serial.print(ESP.getFreeHeap());
     Serial.println(" bytes");*/
-    delay(1000);
 }
