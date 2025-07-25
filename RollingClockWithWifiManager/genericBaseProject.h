@@ -60,6 +60,8 @@
 
 #include "touch.h"
 
+#include "utils.h"
+
 // Number of seconds after reset during which a
 // subseqent reset will be considered a double reset.
 #define DRD_TIMEOUT 10
@@ -76,6 +78,7 @@ Timezone myTZ;
 
 void baseProjectSetup()
 {
+    // Initializes TFT_eSPI
     projectDisplay->displaySetup();
 
     bool forceConfig = false;
@@ -101,6 +104,8 @@ void baseProjectSetup()
     }
 
     startTouchScreen();
+
+    // showFilesInSystem();
 
     Serial.println("\r\nInitialisation done.");
 

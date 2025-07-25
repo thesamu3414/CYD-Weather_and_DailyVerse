@@ -99,13 +99,20 @@ void printTouchToDisplay(TS_Point p) {
 
 }
 
+TS_Point getRemapedPoint(XPT2046_Touchscreen &touchscreen)
+{
+  TS_Point p = touchscreen.getPoint();
+  p.x = map(p.x,TS_XMIN,TS_XMAX,0,340);
+  p.y = map(p.y,TS_YMIN,TS_YMAX,0,240);
+
+  return p;
+}
+
 void checkAndDrawTouch()
 {
   if (ts.tirqTouched() && ts.touched())
   {
-      TS_Point p = ts.getPoint();
-      p.x = map(p.x,TS_XMIN,TS_XMAX,0,340);
-      p.y = map(p.y,TS_YMIN,TS_YMAX,0,240);
+      TS_Point p = getRemapedPoint(ts);
 
       printTouchToSerial(p);
       printTouchToDisplay(p);
