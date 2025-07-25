@@ -49,6 +49,10 @@ void printTouchToSerial(TS_Point p) {
   Serial.print(p.x);
   Serial.print(", y = ");
   Serial.print(p.y);
+  Serial.print(", tft.width = ");
+  Serial.print(tft.width());
+  Serial.print(", tft.heigth = ");
+  Serial.print(tft.height());
   Serial.println();
 
   Serial.print("               ");
@@ -75,7 +79,9 @@ void printTouchToDisplay(TS_Point p) {
   int x = 0;
   int y = 0;
   int fontSize = 1;
-  tft.setTextSize(1);
+  tft.setTextSize(fontSize);
+
+  tft.fillRect(0, 0, 320, tft.fontHeight(), TFT_BLACK);
 
   String temp = "Pressure = " + String(p.z);
   //tft.drawCentreString(temp, x, y, fontSize);

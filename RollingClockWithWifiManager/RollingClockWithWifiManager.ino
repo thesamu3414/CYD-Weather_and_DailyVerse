@@ -24,7 +24,9 @@
 #include "token.h"
 #include "genericBaseProject.h"
 #include "RollingClockLogic.h"
+
 #include "bibleVerse.h"
+#include "screensMngr.h"
 
 void setup()
 {
@@ -36,8 +38,7 @@ void setup()
     rollingClockSetup(projectConfig.twentyFourHour, projectConfig.usDateFormat);
 }
 
-bool first = true;
-int apiRequests = 0;
+
 
 unsigned long lastUpdateTime = 0;
 const int updateInterval = 1000;
@@ -46,7 +47,7 @@ void loop()
 {
     baseProjectLoop();
 
-    checkAndDrawTouch();
+    //checkAndDrawTouch();
 
     unsigned long currentTime = millis();
 
@@ -54,12 +55,10 @@ void loop()
     {
         Serial.println("Entering first time");
         drawRollingClock();
-        drawdailyVerse();
+        drawBibleVerseScreen();
 
         wDay =  myTZ.weekday();
         first = false;
-        apiRequests += 1;
-        drawNumbApiRequests(apiRequests);
     }
     else if (currentTime - lastUpdateTime >= updateInterval)
     {
@@ -71,11 +70,12 @@ void loop()
         else if (dayChanged())
         {
             Serial.println("Day change");
-            apiRequests += 1;
-            drawdailyVerse();
-            drawNumbApiRequests(apiRequests);
+            daychanged = true;
+            //drawdailyVerse();
         }
     }
+
+    checkTouchForNavigation();
     /*
     Serial.print(" outside - Free heap memory: ");
     Serial.print(ESP.getFreeHeap());

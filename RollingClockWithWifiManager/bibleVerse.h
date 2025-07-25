@@ -8,9 +8,13 @@
 String verse_text, book;
 int chapter, verse_num;
 
+bool weHaveVerse;
+
 // split the verse into lines that fit the TFT screen (chunksize) and get the length of the longest one
-void splitStringIntoChunks(const String &inputString, int chunkSize, char* buffer, int &chunkNumber, int &maxLineLength) 
+void splitStringIntoChunks(String &inputString, int chunkSize, char* buffer, int &chunkNumber, int &maxLineLength) 
 {
+  inputString.replace("\n"," ");
+
   int startIndex = 0;
   int spaceIndex;
   String currentChunk = "";
@@ -79,11 +83,16 @@ void drawUnexpectedCode(int unexpectedCode)
   char buffer[50];
   memset(buffer, 0, sizeof(buffer));
 
-  tft.fillRect(0, 90, 320, height - 110, TFT_BLACK);
+  // If we dont have a verse saved, draw error screen.
+  // if we DO have a verse, draw that verse and the http error code on the bottom
+  if(!weHaveVerse)
+  {
+    tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, height - 110, TFT_BLACK);
 
-  sprintf(buffer, "Error requesting verse. Unexpected HTTP Code.");
-  tft.drawString("Unexpected HTTP Code", 90, 135);
-  tft.drawString("Error requesting verse", 90, 150);
+    sprintf(buffer, "Error requesting verse. Unexpected HTTP Code.");
+    tft.drawString("Unexpected HTTP Code", 90, 135);
+    tft.drawString("Error requesting verse", 90, 150);
+  }
 
   tft.fillRect(160,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
 
@@ -97,7 +106,7 @@ void drawUnexpectedCode(int unexpectedCode)
   Serial.println(tft.width() - tft.textWidth("B") * strlen(buffer));
 }
 
-void extractVerse(String api_response)
+bool extractVerse(String api_response)
 {
   StaticJsonDocument<1024> doc;
   DeserializationError error = deserializeJson(doc, api_response);
@@ -106,7 +115,7 @@ void extractVerse(String api_response)
   {
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.f_str());
-    return;
+    return false;
   }
   
   book = doc["random_verse"]["book_id"] | "";
@@ -117,6 +126,8 @@ void extractVerse(String api_response)
   Serial.print("Free heap memory: ");
   Serial.print(ESP.getFreeHeap());
   Serial.println(" bytes");
+
+  return true;
 }
 
 bool getdailyVerse()
@@ -156,10 +167,17 @@ bool getdailyVerse()
         Serial.println("Response:");
         Serial.println(payload); // Print the response
 
-        extractVerse(payload);
-        //extractVerse(ex_response); for debuggin
-
-        getSuccess = true;
+        if(extractVerse(payload))
+        {
+          // fill the right half of the bottom of the txt withblack background
+          // to eliminate the htpp code drawing that is only for error codes
+          tft.fillRect(160,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
+          Serial.println("Filling BOTTOM RIGHT with black.");
+          
+          //extractVerse(ex_response); for debuggin
+          weHaveVerse = true;
+          getSuccess = true;
+        }
 
       } else {
         Serial.printf("Unexpected HTTP code: %d\n", httpCode);
@@ -203,11 +221,6 @@ void drawVerse()
   int charHeigth = tft.fontHeight();
   int textY = 70;
 
-  // fill the right half of the bottom of the txt withblack background
-  // to eliminate the htpp code drawing that is only for error codes
-  tft.fillRect(160,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
-  Serial.println("Filling BOTTOM RIGHT with black.");
-
   // the chunksize will be the space left for the text divided by the width of a 
   // character:
   //        chunksize = (Text_space_width)/(charWidth)
@@ -231,13 +244,13 @@ void drawVerse()
 
   // calculate new vertical margin:
   //    new_vert_margin = ((screen_heigth - textY) - (charHeigth + 1 ) * lines )/2
-  textY += ( (height - textY) - (charHeigth + 1) * (lines + 1) ) / 2;
+  textY += ( (height - textY) - (charHeigth + 1) * (lines + 2) ) / 2;
 
   // draw sentences in different lines in the tft
   int startIndex = 0;
   int spaceIndex;
 
-  tft.fillRect(0, 90, 320, height - 110, TFT_BLACK);
+  tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, height - 110, TFT_BLACK);
 
   for (int i = 0; i<=lines; i++)
   {
@@ -296,8 +309,17 @@ void drawNumbApiRequests(int numReqsts)
 
 void drawdailyVerse()
 {
-  if(getdailyVerse())
+  if(first || daychanged)
   {
-    drawVerse();
+    if(getdailyVerse() || weHaveVerse)
+    {
+      drawVerse();
+    }
+  }
+  else{
+    if(weHaveVerse || getdailyVerse())
+    {
+      drawVerse();
+    }
   }
 }
