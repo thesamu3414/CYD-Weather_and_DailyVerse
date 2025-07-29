@@ -75,6 +75,7 @@ void printTouchToDisplay(TS_Point p) {
   // Clear screen first
   //tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextDatum(TL_DATUM);
 
   int x = 0;
   int y = 0;
@@ -101,7 +102,7 @@ void printTouchToDisplay(TS_Point p) {
   tft.drawString(temp, x, y, fontSize);
 
   // draw an "+" where the touch was made
-  tft.drawString("+", p.x, p.y, fontSize);
+  //tft.drawString("+", p.x, p.y, fontSize);
 
 }
 

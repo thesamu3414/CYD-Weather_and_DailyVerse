@@ -311,12 +311,19 @@ void drawdailyVerse()
 {
   if(first || daychanged)
   {
+    daychanged = false;
+    
+    // we try to get a new verse, if this fails and we have
+    // one saved, draw that one and show error http code
     if(getdailyVerse() || weHaveVerse)
     {
       drawVerse();
     }
   }
   else{
+    // if the day hasnt changed of it isnt the first time
+    // we check if we have a verse already to prioritize that one
+    //          if not, we try to get one or draw error http code (see getdailyVerse)
     if(weHaveVerse || getdailyVerse())
     {
       drawVerse();

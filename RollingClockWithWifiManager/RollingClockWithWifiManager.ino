@@ -71,7 +71,11 @@ void loop()
         {
             Serial.println("Day change");
             daychanged = true;
-            //drawdailyVerse();
+            if(currentScreen == SCREEN_BIBLE_VERSE)
+            {
+                //drawdailyVerse();
+                drawBibleVerseScreen();
+            }
         }
     }
 

@@ -60,11 +60,11 @@ void drawWeatherScreen() {
   //tft.fillScreen(TFT_BLACK);
   tft.fillRect(0, 90, 320, tft.height() - 110, TFT_BLACK);
   tft.setTextColor(TFT_WHITE);
-  tft.drawString("Weather Today", 230, 115);
+  tft.drawString("Weather Today", 110, 115);
 
   // draw weather data...
   
-  drawNavigationArrows();
+  //drawNavigationArrows();
 }
 
 void drawBibleVerseScreen() {
@@ -74,7 +74,7 @@ void drawBibleVerseScreen() {
 
   drawdailyVerse();
 
-  drawNavigationArrows();
+  //drawNavigationArrows();
 }
 
 void navigateLeft() {
@@ -109,15 +109,11 @@ void checkTouchForNavigation() {
 
     printTouchToDisplay(p);
 
-    // Left arrow touched
-    if (p.x < 30 && p.y > 90 && p.y < 150) {
-      navigateLeft();
-    }
-    // Right arrow touched
-    else if (p.x > 300 && p.y > 90 && p.y < 150) {
+    // Bottom part of screen touched
+    if (p.y > 90 ) {
       navigateRight();
     }
 
-    delay(50);
+    delay(100);
   }
 }
