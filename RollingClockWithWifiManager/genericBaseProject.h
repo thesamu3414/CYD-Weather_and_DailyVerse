@@ -123,7 +123,7 @@ void baseProjectSetup()
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
     WiFi.mode(WIFI_STA);
-    WiFi.begin(ssidDIGI, passwDIGI);
+    WiFi.begin(SSID_DIGI, PASSW_DIGI);
 
     while (WiFi.status() != WL_CONNECTED)
     {

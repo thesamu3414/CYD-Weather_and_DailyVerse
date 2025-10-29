@@ -60,10 +60,11 @@ void drawWeatherScreen() {
   //tft.fillScreen(TFT_BLACK);
   tft.fillRect(0, 90, 320, tft.height() - 110, TFT_BLACK);
   tft.setTextColor(TFT_WHITE);
-  tft.drawString("Weather Today", 110, 115);
+  //tft.drawString("Weather Today", 110, 115);
 
   // draw weather data...
-  
+  drawWeatherInfo();
+
   //drawNavigationArrows();
 }
 

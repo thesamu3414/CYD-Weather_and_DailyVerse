@@ -80,6 +80,7 @@ void printTouchToDisplay(TS_Point p) {
   int x = 0;
   int y = 0;
   int fontSize = 1;
+  tft.setTextFont(2);
   tft.setTextSize(fontSize);
 
   tft.fillRect(0, 0, 320, tft.fontHeight(), TFT_BLACK);

@@ -25,8 +25,10 @@
 #include "genericBaseProject.h"
 #include "RollingClockLogic.h"
 
+#include "weather.h"
 #include "bibleVerse.h"
 #include "screensMngr.h"
+
 
 void setup()
 {
@@ -62,10 +64,17 @@ void loop()
     }
     else if (currentTime - lastUpdateTime >= updateInterval)
     {
-        if (minuteChanged())
+        if (minuteChanged() )
         {
             Serial.println("Minute change");
             drawRollingClock();
+
+            if(currentScreen == SCREEN_WEATHER && 
+                (myTZ.minute() == 30 || myTZ.minute() == 0))
+            {
+                //drawdailyVerse();
+                drawWeatherScreen();
+            }
         }
         else if (dayChanged())
         {
@@ -75,6 +84,10 @@ void loop()
             {
                 //drawdailyVerse();
                 drawBibleVerseScreen();
+            }
+            else if (currentScreen == SCREEN_WEATHER)
+            {
+                drawWeatherScreen();
             }
         }
     }
