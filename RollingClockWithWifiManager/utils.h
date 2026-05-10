@@ -1,8 +1,8 @@
-#include "SPIFFS.h"
+#include "LittleFS.h"
 
 void showFilesInSystem()
 {
-    File root = SPIFFS.open("/");
+    File root = LittleFS.open("/");
 
     File file = root.openNextFile();
 

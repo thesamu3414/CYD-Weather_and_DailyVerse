@@ -2,7 +2,7 @@
 // Library Defines - Need to be defined before library import
 // ----------------------------
 
-#define ESP_DRD_USE_SPIFFS true
+#define ESP_DRD_USE_LITTLEFS true
 
 // ----------------------------
 // Standard Libraries
@@ -15,8 +15,7 @@
 #include <WiFi.h>
 
 #include <FS.h>
-#include "SPIFFS.h"
-
+#include "LITTLEFS.h"
 // ----------------------------
 // Additional Libraries - each one of these will need to be installed.
 // ----------------------------
@@ -92,15 +91,15 @@ void baseProjectSetup()
         forceConfig = true;
     }
 
-    // Initialise SPIFFS, if this fails try .begin(true)
+    // Initialise LittleFS, if this fails try .begin(true)
     // NOTE: I believe this formats it though it will erase everything on
-    // spiffs already! In this example that is not a problem.
+    // LittleFS already! In this example that is not a problem.
     // I have found once I used the true flag once, I could use it
     // without the true flag after that.
-    bool spiffsInitSuccess = SPIFFS.begin(false) || SPIFFS.begin(true);
+    bool spiffsInitSuccess = LittleFS.begin(false) || LittleFS.begin(true);
     if (!spiffsInitSuccess)
     {
-        Serial.println("SPIFFS initialisation failed!");
+        Serial.println("LittleFS initialisation failed!");
         while (1)
             yield(); // Stay here twiddling thumbs waiting
     }
