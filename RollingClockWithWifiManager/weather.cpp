@@ -588,6 +588,9 @@ void drawWeather()
   int height = tft.height();
   int margin = 5;
 
+  int temp_X = 10;
+  int temp_Y = 210;
+
   tft.setTextDatum(TL_DATUM);
   tft.setFreeFont(&Orbitron_Light_24);
   tft.setTextSize(3);
@@ -599,14 +602,22 @@ void drawWeather()
   char buffer[10];
   memset(buffer,0,sizeof(buffer));
 
+  // Print black weather part screen
   tft.fillRect(0,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
   Serial.print("weather::drawWeather() - temp: ");
   Serial.println(oneCall.current.temp);
 
   oneCall.printSummary();
 
-  sprintf(buffer, "%.1f °", oneCall.current.temp);
-  tft.drawString(buffer, 80, 210 - tft.fontHeight());
+  // temperature
+  sprintf(buffer, "%.1f", oneCall.current.temp);
+  tft.drawString(buffer, temp_X, temp_Y - tft.fontHeight());
+  // degrees character
+  tft.setTextSize(1);
+  tft.drawString("o", temp_X + charWidth * 3.2, temp_Y + 10 - charHeigth);
+
+  
+
 }
 
 void drawWeatherInfo()
