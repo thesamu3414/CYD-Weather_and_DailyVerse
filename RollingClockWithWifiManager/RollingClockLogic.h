@@ -55,7 +55,7 @@ bool dayChanged()
 #include "Digit.h"
 Digit *digs[4];
 int colons[1];
-int timeY = 25;
+int timeY = 15;
 int ampm[2]; // X, Y of the AM or PM indicator
 bool ispm;
 

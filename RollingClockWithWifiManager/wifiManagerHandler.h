@@ -17,7 +17,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
   wm_Display->drawWifiManagerMessage(myWiFiManager);
 }
 
-void setupWiFiManager(bool forceConfig, ProjectConfig config, ProjectDisplay *theDisplay)
+void setupWiFiManager(bool forceConfig, ProjectConfig &config, ProjectDisplay *theDisplay)
 {
   wm_Display = theDisplay;
   WiFiManager wm;

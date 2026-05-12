@@ -5,11 +5,10 @@
 #include <vector>
 #include <ezTime.h>
 #include <TFT_eSPI.h>
+#include <HTTPClient.h>
 
 extern Timezone myTZ;
 extern TFT_eSPI tft;
-
-
 
 struct clouds
 {
@@ -178,7 +177,7 @@ public:
     }
 
     // Parse from JSON
-    bool parseJson(const String& jsonString);
+    bool parseJson(WiFiClient* stream);
     void printSummary();
 
     // Clear/reset data
@@ -285,7 +284,7 @@ public:
     }
 
     // Parse from JSON
-    bool parseJson(const String& jsonString);
+    bool parseJson(WiFiClient* stream);
     WeatherElement* getEntry(int index);
     void printSummary();
 
@@ -321,7 +320,7 @@ public:
     }
 
     // Parse from JSON
-    bool parseJson(const String& jsonString);
+    bool parseJson(WiFiClient* stream);
     WeatherElement& getData() {return r_data;};
     void printSummary();
 
