@@ -85,11 +85,12 @@ void printTouchToDisplay(TS_Point p) {
 
   tft.fillRect(0, 0, 320, tft.fontHeight(), TFT_BLACK);
 
-  String temp = "Pressure = " + String(p.z);
+  String temp = "";
+  //String temp = "Pressure = " + String(p.z);
   //tft.drawCentreString(temp, x, y, fontSize);
 
   //y += 16;
-  temp += ", X = " + String(p.x);
+  temp += "X = " + String(p.x);
   //tft.drawCentreString(temp, x, y, fontSize);
 
   if (p.x > maxX) {maxX = p.x;}

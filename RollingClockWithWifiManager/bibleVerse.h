@@ -219,7 +219,7 @@ void drawVerse()
   tft.setTextColor(TFT_WHITE);
   int charWidth = tft.textWidth("B");
   int charHeigth = tft.fontHeight();
-  int textY = 70;
+  int textY = SCREEN_Y_TIMEDATE;
 
   // the chunksize will be the space left for the text divided by the width of a 
   // character:
@@ -251,6 +251,8 @@ void drawVerse()
   int spaceIndex;
 
   tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, height - 110, TFT_BLACK);
+
+  tft.drawLine(0, SCREEN_Y_TIMEDATE , 340, SCREEN_Y_TIMEDATE, 0xFFFF);
 
   for (int i = 0; i<=lines; i++)
   {

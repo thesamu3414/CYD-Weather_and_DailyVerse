@@ -1,5 +1,5 @@
 #include "weather.h"
-#include <HTTPClient.h>
+#include "weather_icons.h"
 #include <WiFiClientSecure.h>
 //#include "Free_Fonts.h"
 
@@ -51,27 +51,27 @@ bool requestOpenWeather(bool curr, bool forec, bool oneCall)
       
       if (httpCode == HTTP_CODE_OK) // If response code is 200
       {
-        String payload = http.getString(); // Get the response payload
+        WiFiClient* stream = http.getStreamPtr(); // Get the response payload
         Serial.println("Response:");
-        Serial.println(payload); // Print the response
+        Serial.println(*stream); // Print the response
 
         if(curr)
         {
           WeatherCurrent& current =
             WeatherCurrent::getInstance();
-          current.parseJson(payload);
+          current.parseJson(stream);
         }
         else if (forec)
         {
           WeatherForecast& forecast =
             WeatherForecast::getInstance();
-          forecast.parseJson(payload);
+          forecast.parseJson(stream);
         }
         else if (oneCall)
         {
           Weather_OneCall_3_0& oneCall_3_0 =
             Weather_OneCall_3_0::getInstance();
-          oneCall_3_0.parseJson(payload);
+          oneCall_3_0.parseJson(stream);
         }
 
       } else {
@@ -97,10 +97,10 @@ bool requestOpenWeather(bool curr, bool forec, bool oneCall)
 }
 
 // One Call API 3.0
-bool Weather_OneCall_3_0::parseJson(const String& jsonString) 
+bool Weather_OneCall_3_0::parseJson(WiFiClient* stream) 
 {
-    DynamicJsonDocument doc(8192);  // Larger size for full forecast
-    DeserializationError error = deserializeJson(doc, jsonString);
+    DynamicJsonDocument doc(32768);  // Larger size for full forecast
+    DeserializationError error = deserializeJson(doc, *stream);
 
     if (error) {
     Serial.print("JSON parse error: ");
@@ -304,10 +304,10 @@ bool Weather_OneCall_3_0::parseJson(const String& jsonString)
 }
 
 
-bool WeatherForecast::parseJson(const String& jsonString) 
+bool WeatherForecast::parseJson(WiFiClient* stream) 
 {
     DynamicJsonDocument doc(8192);  // Larger size for full forecast
-    DeserializationError error = deserializeJson(doc, jsonString);
+    DeserializationError error = deserializeJson(doc, *stream);
 
     r_fc_temp_min = 50.0;
     r_fc_temp_max = 0.0;
@@ -395,10 +395,10 @@ bool WeatherForecast::parseJson(const String& jsonString)
     return true;
 }
 
-bool WeatherCurrent::parseJson(const String& jsonString) 
+bool WeatherCurrent::parseJson(WiFiClient* stream) 
 {
     DynamicJsonDocument doc(8192);  // Larger size for full forecast
-    DeserializationError error = deserializeJson(doc, jsonString);
+    DeserializationError error = deserializeJson(doc, *stream);
 
     if (error) {
       Serial.print("JSON parse error: ");
@@ -584,40 +584,113 @@ void drawWeather()
   Weather_OneCall_3_0& oneCall =
           Weather_OneCall_3_0::getInstance();
 
-  int width = tft.width();
-  int height = tft.height();
+  
   int margin = 5;
+  int weatherScreen_Y = 71; // horizontal line separating clock and weather info
+  int temp_X = 5;
+  int temp_Y = weatherScreen_Y + margin;
 
-  int temp_X = 10;
-  int temp_Y = 210;
+  int temp_font_size = 7;
 
   tft.setTextDatum(TL_DATUM);
-  tft.setFreeFont(&Orbitron_Light_24);
-  tft.setTextSize(3);
-  tft.setTextColor(TFT_WHITE);
-  int charWidth = tft.textWidth("B");
+  tft.setTextSize(temp_font_size);
+  tft.setTextFont(1);
   int charHeigth = tft.fontHeight();
-  int textY = 70;
 
   char buffer[10];
   memset(buffer,0,sizeof(buffer));
 
   // Print black weather part screen
-  tft.fillRect(0,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
+  tft.fillRect(0,240 - tft.fontHeight(), weatherScreen_Y, tft.fontHeight(), TFT_BLACK);
   Serial.print("weather::drawWeather() - temp: ");
   Serial.println(oneCall.current.temp);
 
   oneCall.printSummary();
 
-  // temperature
-  sprintf(buffer, "%.1f", oneCall.current.temp);
-  tft.drawString(buffer, temp_X, temp_Y - tft.fontHeight());
+  tft.drawLine(0, weatherScreen_Y , 340, weatherScreen_Y, 0xFFFF);
+  tft.drawLine(0, temp_Y + charHeigth, 340, temp_Y + charHeigth, 0xFFFF);
+
+  // temperature ------------------------
+  int intPart     = (int)oneCall.current.temp;
+  int decimalPart = (int)((oneCall.current.temp - intPart) * 10); 
+  int feelslike   = (int)(oneCall.current.feels_like - oneCall.current.temp);
+
+
+  tft.setTextColor(0x25C4);
+  tft.setTextSize(temp_font_size);
+  // int part
+  sprintf(buffer, "%d", intPart);
+  tft.drawString(buffer, temp_X, temp_Y);
+  int tempTextWidth = tft.textWidth(buffer);
+  int tempTextHeight = tft.fontHeight();
+  // decimal dot
+  tft.setTextSize(temp_font_size-2);
+  tft.drawString(".", temp_X + tempTextWidth-3, temp_Y + charHeigth - tft.fontHeight()-3);
+  tempTextWidth += tft.textWidth(".")-3; // Update total width
+  // decimal part
+  memset(buffer,0,sizeof(buffer));
+  tft.setTextSize(temp_font_size);
+  sprintf(buffer, "%d", decimalPart);
+  tft.drawString(buffer, temp_X + tempTextWidth, temp_Y);
+  tempTextWidth += tft.textWidth(buffer); // Update total width
+
   // degrees character
-  tft.setTextSize(1);
-  tft.drawString("o", temp_X + charWidth * 3.2, temp_Y + 10 - charHeigth);
+  tft.setTextSize(3);
+  tft.drawString("o", temp_X + tempTextWidth, temp_Y-5);
 
+  // feels like part
+  if (feelslike > 0.1 || feelslike < -0.1) // Only show if difference is significant
+  {
+    memset(buffer,0,sizeof(buffer));
+    tft.setTextSize(2);
+    if(feelslike > 0) 
+    {
+      tft.setTextColor(0xFDA0);
+      sprintf(buffer, "+%d", feelslike);
+      tft.drawString(buffer, temp_X + tempTextWidth, temp_Y + charHeigth - tft.fontHeight() - 5);
+
+    }
+    else
+    {
+      tft.setTextColor(0x867D);
+      sprintf(buffer, "%d", feelslike);
+      tft.drawString(buffer, temp_X + tempTextWidth, temp_Y + charHeigth - tft.fontHeight() - 5);
+    }
+  }
+  tempTextWidth += tft.textWidth(buffer); // Update total width
+
+  // Weather icon
+  tft.drawBitmap(tempTextWidth + 5, temp_Y, wea_icon_sun, 30, 30, 0x0000, 0xFDA0);
+
+  tft.drawBitmap(0, temp_Y + charHeigth + 5, wea_icon_allArray[0], 30, 30, 0x0000, 0xFDA0);
+  tft.drawBitmap(30, temp_Y + charHeigth + 5, wea_icon_allArray[1], 30, 30, 0x0000, 0xD69A);
+  tft.drawBitmap(60, temp_Y + charHeigth + 5, wea_icon_allArray[2], 30, 30, 0x0000, 0xD69A);
+  tft.drawBitmap(90, temp_Y + charHeigth + 5, wea_icon_allArray[3], 30, 30, 0x0000, 0xD69A);
+  tft.drawBitmap(120, temp_Y + charHeigth + 5, wea_icon_allArray[4], 30, 30, 0x0000, 0xD69A);
+  tft.drawBitmap(150, temp_Y + charHeigth + 5, wea_icon_allArray[5], 30, 30, 0x0000, 0xFFE0);
+  tft.drawBitmap(180, temp_Y + charHeigth + 5, wea_icon_allArray[6], 30, 30, 0x0000, 0x867D);
+  tft.drawBitmap(210, temp_Y + charHeigth + 5, wea_icon_allArray[7], 30, 30, 0x0000, 0x867D);
+  tft.drawBitmap(240, temp_Y + charHeigth + 5, wea_icon_allArray[8], 30, 30, 0x0000, 0x001F);
+  tft.drawBitmap(270, temp_Y + charHeigth + 5, wea_icon_allArray[9], 30, 30, 0x0000, 0xFEA0);
+
+  tft.drawBitmap(0, temp_Y + charHeigth + 35, wea_icon_allArray[10], 30, 30, 0x0000, 0xFFFF);
+  tft.drawBitmap(30, temp_Y + charHeigth + 35, wea_icon_allArray[11], 30, 30, 0x0000, 0x7BEF);
+
+
+
+  memset(buffer,0,sizeof(buffer));
   
+  // Humudity ---------------------------
+  tft.setTextColor(0x5FA);
+  tft.setTextSize(temp_font_size);
+  sprintf(buffer, "%d", oneCall.current.humidity);
+  tft.drawString(buffer, 340 - tft.textWidth(buffer) - tft.textWidth("."), temp_Y);
+  int humTextWidth = tft.textWidth(".");
+  // percentage character
+  tft.setTextSize(3);
+  tft.drawString("%", 340 - humTextWidth, temp_Y + charHeigth - tft.fontHeight() - 3);
 
+  //drawWeatherForecast_Hourly();
 }
 
 void drawWeatherInfo()
