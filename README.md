@@ -10,7 +10,6 @@ This project implements a rolling clock display on the ESP32 Cheap Yellow Displa
 - **Daily Bible Verses**: Shows inspirational Bible verses
 - **Touch Screen Interface**: Interactive controls for settings and navigation
 - **NTP Time Synchronization**: Accurate time keeping with internet sync
-- **Customizable Display**: Support for different screens and layouts
 
 ## Hardware Requirements
 
@@ -45,14 +44,40 @@ The project uses the following libraries (automatically installed via PlatformIO
 3. Prepare the `token.h` file.
     First rename `token.h.example` to `token.h`.
     Change the values inside:
-        -   Wifi SSID and password, to yours.
 
-3. Build and upload to your ESP32 CYD:
+    *   Wifi SSID and password to yours if you preffer it to connect automatically always, instead of entering
+            in AP mode. For this you should also comment the `setupWiFiManager` function call and uncomment `WiFi.mode` and `WiFi.begin` calls, inside `genericBaseProject.h`:
+
+            ```
+            // While Wifi is not connected it will not progress past here
+            setupWiFiManager(forceConfig, projectConfig, projectDisplay); // COMMENT THIS
+
+            // Set WiFi to station mode and disconnect from an AP if it was Previously
+            // connected
+            //WiFi.mode(WIFI_STA);              // UNCOMMENT THIS
+            //WiFi.begin(wifiSSID, wifiPASSW);  // AND THIS
+            ``` 
+    * OpenWeather API key. You should create your own account. It is free. Check it out [here](https://openweathermap.org/api/one-call-3?collection=one_call_api).
+    *  Your city coordinates. Change the latitude and longitude already in use (from Madrid) for the ones in your city.
+    * Your timezone. 
+        * If you use the `setupWiFiManager` function, inside the AP, once you configure the WiFi, you will be able to introduce your time zone. Check out the [List of TZ database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and introduce the "TZ identifier" from your time zone.
+        * If you choose to use the WiFi station mode (commenting and uncommenting the code mentioned in the first point of this list), you should introduce your "TZ identifier" in the code. In the file `projectConfig.h`, change "Europe/London" for yours:
+        ```
+        class ProjectConfig
+        {
+        public:
+        // https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+        String timeZone = "Europe/London"; // seems to be something wrong with Europe/Dublin
+
+        bool twentyFourHour = false;
+        ```
+
+4. Build and upload to your ESP32 CYD:
    ```
    pio run -t upload
    ```
 
-4. Monitor the serial output:
+5. Monitor the serial output:
    ```
    pio device monitor
    ```
@@ -63,14 +88,13 @@ The project uses the following libraries (automatically installed via PlatformIO
 2. If not configured, it will create a WiFi access point (e.g., "ESP32-Config").
 3. Connect to the AP and configure your WiFi credentials.
 4. The device will connect to the internet and display the rolling clock.
-5. Use the touchscreen to navigate between different screens (clock, weather, verses, settings).
+5. Use the touchscreen to toggle between the screens (weather and daily bible verse). The clock with time and date is always showing.
 
 ## Configuration
 
 - WiFi settings: Configured via the built-in WiFi manager
 - Weather API: Requires API key (configure in `token.h`)
-- Bible verses: Fetched from an online service
-- Display settings: Adjustable via touch interface
+- Bible verses: Fetched from an online API service, no key needed.
 
 ## Project Structure
 
@@ -86,7 +110,7 @@ The project uses the following libraries (automatically installed via PlatformIO
 
 ## Contributing
 
-Contributions are welcome! Please fork the repository and submit pull requests.
+Contributions are welcome! Please fork the repository and submit pull requests. Feel free to message me for any ideas, requests or bugs detected.
 
 ## License
 
