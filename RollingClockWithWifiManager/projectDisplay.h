@@ -2,6 +2,8 @@
 #ifndef PROJECTDISPLAY_H
 #define PROJECTDISPLAY_H
 
+// BASE CLASS for the display.
+
 class ProjectDisplay
 {
 public:

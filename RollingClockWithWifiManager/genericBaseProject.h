@@ -2,16 +2,20 @@
 // Library Defines - Need to be defined before library import
 // ----------------------------
 
-#define ESP_DRD_USE_SPIFFS true
+#define ESP_DRD_USE_LITTLEFS true
 
 // ----------------------------
 // Standard Libraries
 // ----------------------------
+#include <SPI.h>
+// A low-level library for SPI communication. It provides basic functions 
+// to send and receive data over SPI but does not handle graphics or 
+// display-specific tasks.
+
 #include <WiFi.h>
 
 #include <FS.h>
-#include "SPIFFS.h"
-
+#include "LITTLEFS.h"
 // ----------------------------
 // Additional Libraries - each one of these will need to be installed.
 // ----------------------------
@@ -53,6 +57,12 @@
 
 #include "cheapYellowLCD.h"
 
+#include "touch.h"
+
+#include "utils.h"
+
+#include "constAndParam.h"
+
 // Number of seconds after reset during which a
 // subseqent reset will be considered a double reset.
 #define DRD_TIMEOUT 10
@@ -69,6 +79,7 @@ Timezone myTZ;
 
 void baseProjectSetup()
 {
+    // Initializes TFT_eSPI
     projectDisplay->displaySetup();
 
     bool forceConfig = false;
@@ -80,18 +91,23 @@ void baseProjectSetup()
         forceConfig = true;
     }
 
-    // Initialise SPIFFS, if this fails try .begin(true)
+    // Initialise LittleFS, if this fails try .begin(true)
     // NOTE: I believe this formats it though it will erase everything on
-    // spiffs already! In this example that is not a problem.
+    // LittleFS already! In this example that is not a problem.
     // I have found once I used the true flag once, I could use it
     // without the true flag after that.
-    bool spiffsInitSuccess = SPIFFS.begin(false) || SPIFFS.begin(true);
+    bool spiffsInitSuccess = LittleFS.begin(false) || LittleFS.begin(true);
     if (!spiffsInitSuccess)
     {
-        Serial.println("SPIFFS initialisation failed!");
+        Serial.println("LittleFS initialisation failed!");
         while (1)
             yield(); // Stay here twiddling thumbs waiting
     }
+
+    startTouchScreen();
+
+    // showFilesInSystem();
+
     Serial.println("\r\nInitialisation done.");
 
     if (!projectConfig.fetchConfigFile())
@@ -106,7 +122,7 @@ void baseProjectSetup()
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
     WiFi.mode(WIFI_STA);
-    WiFi.begin(ssidDIGI, passwDIGI);
+    WiFi.begin(SSID_DIGI, PASSW_DIGI);
 
     while (WiFi.status() != WL_CONNECTED)
     {

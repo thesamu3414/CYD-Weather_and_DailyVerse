@@ -5,6 +5,8 @@
 //
 // Can be installed from the library manager (Search for "TFT_eSPI")
 // https://github.com/Bodmer/TFT_eSPI
+//
+// Inherits from the ProjectDisplay library
 
 TFT_eSPI tft = TFT_eSPI();
 

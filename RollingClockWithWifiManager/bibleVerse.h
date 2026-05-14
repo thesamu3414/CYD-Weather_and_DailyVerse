@@ -3,13 +3,18 @@
 #include <ArduinoJson.h>
 
 // for debugging porpuses
-//String ex_response = "{\"success\": {\"total\": 1},\"contents\": {\"id\": \"Rj5RwO0mA6_tOSPJQFMagQeF\",\"testament\": \"Old Testament\",\"book\": \"Micah\",\"bookid\": 33,\"chapter\": 2,\"verse\": \"And they covet fields, and take them by violence; and houses, and take them away: so they oppress a man and his house, even a man and his heritage.\",\"title\": \"Bible Verse of the day\",\"category\": \"vod\",\"date\": \"2025-01-26\"},\"copyright\": {\"url\": \"https://quotes.rest\",\"year\": \"2025\"}}";
+// String ex_response = "{\"success\":{\"total\":1},\"contents\":{\"id\":\"U24_S1Qxu1J87ke9Y3kSrweF\",\"testament\":\"Old Testament\",\"book\":\"Micah\",\"bookid\":33,\"chapter\":2,\"verse\":\"In that day shall one take up a parable against you, and lament with a doleful lamentation, and say, We be utterly spoiled: he has changed the portion of my people: how has he removed it from me! turning away he has divided our fields.\",\"title\":\"Bible Verse of the day\",\"category\":\"vod\",\"date\":\"2025-01-28\"},\"copyright\":{\"url\":\"https://quotes.rest\",\"year\":\"2025\"}}";
 
-String verse, book;
-int chapter;
+String verse_text, book;
+int chapter, verse_num;
+
+bool weHaveVerse;
 
 // split the verse into lines that fit the TFT screen (chunksize) and get the length of the longest one
-void splitStringIntoChunks(const String &inputString, int chunkSize, char* buffer, int &chunkNumber, int &maxLineLength) {
+void splitStringIntoChunks(String &inputString, int chunkSize, char* buffer, int &chunkNumber, int &maxLineLength) 
+{
+  inputString.replace("\n"," ");
+
   int startIndex = 0;
   int spaceIndex;
   String currentChunk = "";
@@ -64,7 +69,44 @@ void splitStringIntoChunks(const String &inputString, int chunkSize, char* buffe
 */
 }
 
-void extractVerse(String api_response)
+// Draw the unexpected HTTP Code in the bottom right corner
+// of the TFT.
+void drawUnexpectedCode(int unexpectedCode)
+{
+  int width = tft.width();
+  int height = tft.height();
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextFont(2);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_RED);
+
+  char buffer[50];
+  memset(buffer, 0, sizeof(buffer));
+
+  // If we dont have a verse saved, draw error screen.
+  // if we DO have a verse, draw that verse and the http error code on the bottom
+  if(!weHaveVerse)
+  {
+    tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, height - 110, TFT_BLACK);
+
+    sprintf(buffer, "Error requesting verse. Unexpected HTTP Code.");
+    tft.drawString("Unexpected HTTP Code", 90, 135);
+    tft.drawString("Error requesting verse", 90, 150);
+  }
+
+  tft.fillRect(160,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
+
+  sprintf(buffer, "HttpCode: %d", unexpectedCode);
+  tft.drawString(buffer, tft.width() - tft.textWidth("B") * strlen(buffer), 240 - tft.fontHeight());
+
+  Serial.println("Unexpected Code.");
+  Serial.print("---Buffer lenght: ");
+  Serial.print(strlen(buffer));
+  Serial.print(", X: ");
+  Serial.println(tft.width() - tft.textWidth("B") * strlen(buffer));
+}
+
+bool extractVerse(String api_response)
 {
   StaticJsonDocument<1024> doc;
   DeserializationError error = deserializeJson(doc, api_response);
@@ -73,20 +115,24 @@ void extractVerse(String api_response)
   {
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.f_str());
-    return;
+    return false;
   }
   
-  verse = doc["contents"]["verse"] | "";
-  book = doc["contents"]["book"] | "";
-  chapter = doc["contents"]["chapter"] | 0;
+  book = doc["random_verse"]["book_id"] | "";
+  chapter = doc["random_verse"]["chapter"] | 0;
+  verse_num = doc["random_verse"]["verse"] | 0;
+  verse_text = doc["random_verse"]["text"] | "";
 
   Serial.print("Free heap memory: ");
   Serial.print(ESP.getFreeHeap());
   Serial.println(" bytes");
+
+  return true;
 }
 
-void getWeekVerse()
+bool getdailyVerse()
 {
+  bool getSuccess;
     // Make an HTTP GET request
   if (WiFi.status() == WL_CONNECTED) { // Check if connected to Wi-Fi
     WiFiClientSecure client;
@@ -94,45 +140,71 @@ void getWeekVerse()
 
     HTTPClient http;
 
-    const String url = "https://quotes.rest/bible/vod.json?";
+    const String url = "https://bible-api.com/data/kjv/random/NT";
     http.begin(client, url); // Initialize HTTPClient with URL
 
     // Attach the API token as a header
-    http.addHeader("Authorization", String("Bearer ") + apiToken);
+    //http.addHeader("Authorization", String("Bearer ") + apiToken);
 
-    Serial.print("Authorization: ");
-    Serial.println(String("Bearer ") + apiToken);
+    //Serial.print("Authorization: ");
+    //Serial.println(String("Bearer ") + apiToken);
 
     // uncomment this line and the ex_response on the beggining of the file for debugging purposes
     //extractVerse(ex_response);
-    ///*
+    //drawUnexpectedCode(111); //costum code for knowing when the example verse is showing
+    
     int httpCode = http.GET(); // Perform GET request
+
+    //int httpCode = 200;
 
     // Check HTTP response code
     if (httpCode > 0) {
       Serial.printf("HTTP GET Code: %d\n", httpCode);
       
-      if (httpCode == HTTP_CODE_OK) { // If response code is 200
+      if (httpCode == HTTP_CODE_OK) // If response code is 200
+      {
         String payload = http.getString(); // Get the response payload
         Serial.println("Response:");
         Serial.println(payload); // Print the response
 
-        extractVerse(payload);
+        if(extractVerse(payload))
+        {
+          // fill the right half of the bottom of the txt withblack background
+          // to eliminate the htpp code drawing that is only for error codes
+          tft.fillRect(160,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
+          Serial.println("Filling BOTTOM RIGHT with black.");
+          
+          //extractVerse(ex_response); for debuggin
+          weHaveVerse = true;
+          getSuccess = true;
+        }
 
       } else {
         Serial.printf("Unexpected HTTP code: %d\n", httpCode);
         String response = http.getString(); // Print server's response
         Serial.println(response);
+
+        // draw example verse
+        //extractVerse(ex_response);
+
+        // draw unexpected code in display
+        drawUnexpectedCode(httpCode);
+
+        getSuccess = false;
       }
            
     } else {
       Serial.printf("GET request failed, error: %s\n", http.errorToString(httpCode).c_str());
+      getSuccess = false;
     }
 
     http.end(); // Free resources*/
   } else {
     Serial.println("Wi-Fi not connected");
+    getSuccess = false;
   }
+
+  return getSuccess;
 }
 
 void drawVerse()
@@ -144,9 +216,10 @@ void drawVerse()
   tft.setTextDatum(TL_DATUM);
   tft.setTextFont(2);
   tft.setTextSize(1);
+  tft.setTextColor(TFT_WHITE);
   int charWidth = tft.textWidth("B");
   int charHeigth = tft.fontHeight();
-  int textY = 80;
+  int textY = SCREEN_Y_TIMEDATE;
 
   // the chunksize will be the space left for the text divided by the width of a 
   // character:
@@ -156,10 +229,11 @@ void drawVerse()
 
   int chunkSize = (width - margin * 2) / charWidth;
 
-  char buffer[200];
+  char buffer[400];
+  memset(buffer, 0, sizeof(buffer));
   int lines = 0;
   int maxLineLen = 0;
-  splitStringIntoChunks(verse, chunkSize, buffer, lines, maxLineLen);
+  splitStringIntoChunks(verse_text, chunkSize, buffer, lines, maxLineLen);
   
   // convert buffer to string for drawing
   String verseInLines(buffer);
@@ -170,11 +244,15 @@ void drawVerse()
 
   // calculate new vertical margin:
   //    new_vert_margin = ((screen_heigth - textY) - (charHeigth + 1 ) * lines )/2
-  textY += ( (height - textY) - (charHeigth + 1) * (lines + 1) ) / 2;
-  
+  textY += ( (height - textY) - (charHeigth + 1) * (lines + 2) ) / 2;
+
   // draw sentences in different lines in the tft
   int startIndex = 0;
   int spaceIndex;
+
+  tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, height - 110, TFT_BLACK);
+
+  tft.drawLine(0, SCREEN_Y_TIMEDATE , 340, SCREEN_Y_TIMEDATE, 0xFFFF);
 
   for (int i = 0; i<=lines; i++)
   {
@@ -187,32 +265,68 @@ void drawVerse()
 
     // Extract line
     String line = verseInLines.substring(startIndex, spaceIndex);  
-
     startIndex = spaceIndex + 1;  // Move past the space or to the end of the string
+
+    // for debuggin
+    //Serial.println(line); 
 
     tft.drawString(line, margin, textY + (charHeigth + 1) * i);
   }
 
-  //tft.drawString("+---+", 150, 80);
+  //tft.drawString("+---+", 150, 70);
 
-
-  // ******** BOOK and CHAPTER
+  // ******** BOOK, CHAPTER and VERSE
   tft.setTextDatum(TR_DATUM);
   tft.setTextFont(1);
   tft.setTextSize(1);
 
   char bookChap[50];
+  memset(bookChap, 0, sizeof(bookChap));
 
-  sprintf(bookChap, "%s, %d.", book, chapter);
-
+  sprintf(bookChap, "%s, %d:%d", book, chapter, verse_num);
 
   //tft.fillRect(0, height / 2, 320, charHeigth * 2, TFT_SKYBLUE);
 
   tft.drawString(bookChap, width - margin, textY + (charHeigth + 1) * (lines + 1) + 3);
 }
 
-void drawWeekVerse()
+// draw the number of requests done to the bible api
+// in the bottom left corner of the tft. This is for
+// monitoring purposes.
+void drawNumbApiRequests(int numReqsts)
 {
-    getWeekVerse();
-    drawVerse();
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextFont(2);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_DARKGREY);
+  
+  char buffer[50];
+  memset(buffer, 0, sizeof(buffer));
+  // fill the half of the bottom of the txt withblack background
+  tft.fillRect(0,240 - tft.fontHeight(), 160, tft.fontHeight(), TFT_BLACK);
+
+  sprintf(buffer, "Api Requests: %d", numReqsts);
+  tft.drawString(buffer, 0, 240 - tft.fontHeight());
+}
+
+void drawdailyVerse(const bool &forceRequest)
+{
+  if(forceRequest)
+  {
+    // we try to get a new verse, if this fails and we have
+    // one saved, draw that one and show error http code
+    if(getdailyVerse() || weHaveVerse)
+    {
+      drawVerse();
+    }
+  }
+  else{
+    // if the day hasnt changed of it isnt the first time
+    // we check if we have a verse already to prioritize that one
+    //          if not, we try to get one or draw error http code (see getdailyVerse)
+    if(weHaveVerse || getdailyVerse())
+    {
+      drawVerse();
+    }
+  }
 }

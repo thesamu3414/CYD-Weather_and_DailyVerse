@@ -16,11 +16,11 @@ public:
 
   bool fetchConfigFile()
   {
-    if (SPIFFS.exists(PROJECT_CONFIG_JSON))
+    if (LittleFS.exists(PROJECT_CONFIG_JSON))
     {
       // file exists, reading and loading
       Serial.println("reading config file");
-      File configFile = SPIFFS.open(PROJECT_CONFIG_JSON, "r");
+      File configFile = LittleFS.open(PROJECT_CONFIG_JSON, "r");
       if (configFile)
       {
         Serial.println("opened config file");
@@ -68,7 +68,7 @@ public:
     json[PROJECT_TIME_TWENTY_FOUR_HOUR] = twentyFourHour;
     json[PROJECT_TIME_US_DATE] = usDateFormat;
 
-    File configFile = SPIFFS.open(PROJECT_CONFIG_JSON, "w");
+    File configFile = LittleFS.open(PROJECT_CONFIG_JSON, "w");
     if (!configFile)
     {
       Serial.println("failed to open config file for writing");

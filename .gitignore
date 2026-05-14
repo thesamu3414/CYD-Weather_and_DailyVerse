@@ -5,3 +5,4 @@
 .pio
 .vscode
 RollingClockWithWifiManager/token.h
+weather_data_examples/*

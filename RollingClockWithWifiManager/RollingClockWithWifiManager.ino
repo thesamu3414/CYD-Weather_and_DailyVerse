@@ -24,7 +24,11 @@
 #include "token.h"
 #include "genericBaseProject.h"
 #include "RollingClockLogic.h"
+
+#include "weather.h"
 #include "bibleVerse.h"
+#include "screensMngr.h"
+
 
 void setup()
 {
@@ -36,34 +40,62 @@ void setup()
     rollingClockSetup(projectConfig.twentyFourHour, projectConfig.usDateFormat);
 }
 
+
+
+unsigned long lastUpdateTime = 0;
+const int updateInterval = 1000;
 bool first = true;
 
 void loop()
 {
     baseProjectLoop();
 
+    //checkAndDrawTouch();
+
+    unsigned long currentTime = millis();
+
     if (first)
     {
+        first = false;
         Serial.println("Entering first time");
         drawRollingClock();
-        drawWeekVerse();
+        //drawBibleVerseScreen(true);
+        drawWeatherScreen(true);
 
         wDay =  myTZ.weekday();
-        first = false;
     }
-    else if (minuteChanged())
+    else if (currentTime - lastUpdateTime >= updateInterval)
     {
-        Serial.println("Minute change");
-        drawRollingClock();
-    }
-    else if (weekChanged())
-    {
-        Serial.println("Week change");
-        drawWeekVerse();
+        if (minuteChanged() )
+        {
+            Serial.println("Minute change");
+            drawRollingClock();
+
+            if(currentScreen == SCREEN_WEATHER && 
+                (myTZ.minute() == 30 || myTZ.minute() == 0))
+            {
+                //drawdailyVerse();
+                drawWeatherScreen(true);
+            }
+        }
+        else if (dayChanged())
+        {
+            Serial.println("Day change");
+            if(currentScreen == SCREEN_BIBLE_VERSE)
+            {
+                //drawdailyVerse();
+                drawBibleVerseScreen(true);
+            }
+            else if (currentScreen == SCREEN_WEATHER)
+            {
+                drawWeatherScreen(true);
+            }
+        }
     }
 
+    checkTouchForNavigation();
+    /*
     Serial.print(" outside - Free heap memory: ");
     Serial.print(ESP.getFreeHeap());
-    Serial.println(" bytes");
-    delay(1000);
+    Serial.println(" bytes");*/
 }

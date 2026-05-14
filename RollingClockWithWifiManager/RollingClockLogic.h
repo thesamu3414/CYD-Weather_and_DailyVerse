@@ -5,7 +5,7 @@
 TFT_eSprite sprite = TFT_eSprite(&tft); // Sprite class
 
 int clockFont = 1;
-int clockSize = 4;
+int clockSize = 7;
 int clockDatum = TL_DATUM;
 uint16_t clockBackgroundColor = TFT_BLACK;
 uint16_t clockFontColor = TFT_YELLOW;
@@ -38,23 +38,15 @@ void SetupCYD()
     sprite.setTextDatum(clockDatum);
 }
 
-bool weekChanged()
+bool dayChanged()
 {
     uint8_t new_wDay = myTZ.weekday();// day of week, sunday is day 1
-    
-    Serial.print("new_wDay: ");
-    Serial.print(new_wDay);
-    Serial.print(", wDay: ");
-    Serial.println(wDay);
 
     if ( (new_wDay != wDay) )
     {
         wDay = new_wDay;
         Serial.print("wDay changed ");
-        if (new_wDay == 1)
-        {
-            return true;
-        }
+        return true;
     }
     return false;
 }
@@ -63,7 +55,7 @@ bool weekChanged()
 #include "Digit.h"
 Digit *digs[4];
 int colons[1];
-int timeY = 25;
+int timeY = 15;
 int ampm[2]; // X, Y of the AM or PM indicator
 bool ispm;
 
@@ -73,13 +65,13 @@ void CalculateDigitOffsets()
     int width = tft.width();
     int DigitWidth = tft.textWidth("8");
     int colonWidth = tft.textWidth(":");
-    int left = SHOW_AMPM ? 10 : (width - DigitWidth * 8.5) / 2;
+    int left = SHOW_AMPM ? 10 : 7; //(width/2 - DigitWidth * 4.5) / 2;
     digs[0]->SetXY(left, y);                      // HH
     digs[1]->SetXY(digs[0]->X() + DigitWidth, y); // HH
 
-    colons[0] = digs[1]->X() + DigitWidth; // :
+    colons[0] = digs[1]->X() + DigitWidth - 5; // :
 
-    digs[2]->SetXY(colons[0] + colonWidth, y); // MM
+    digs[2]->SetXY(colons[0] + colonWidth - 10, y); // MM
     digs[3]->SetXY(digs[2]->X() + DigitWidth, y);
 
     //colons[1] = digs[3]->X() + DigitWidth; // :
@@ -144,6 +136,7 @@ void SetupDigits()
 /*-------- DRAWING ----------*/
 void DrawColons()
 {
+    tft.setTextColor(clockFontColor, clockBackgroundColor);
     tft.setTextFont(clockFont);
     tft.setTextSize(clockSize);
     tft.setTextDatum(clockDatum);
@@ -186,6 +179,7 @@ void DrawADigit(Digit *digg)
 
 void DrawDigitsAtOnce()
 {
+    tft.setTextColor(clockFontColor, clockBackgroundColor);
     tft.setTextDatum(TL_DATUM);
     for (size_t f = 0; f <= digs[0]->Height(); f++) // For all animation frames...
     {
@@ -260,28 +254,29 @@ void DrawDate()
     int mth = month(local);
     int yr = year(local) - 2000; //save last 2 digits
 
+    tft.setTextColor(TFT_CYAN, clockBackgroundColor);
+
+    tft.setTextSize(3);
     int width = tft.width();
     int DigitWidth = tft.textWidth("8");
-    int left = (width - DigitWidth * 8) / 2; // "xx/xx/xx" -> 8 digits
+    int left = (width - DigitWidth * 6) + 3; // "xx/xx/xx" -> 8 digits
 
     if (dd != prevDay)
     {
         prevDay = dd;
         tft.setTextDatum(TL_DATUM);
-        char buffer[50];
+        char buffer[7];
         if (NOT_US_DATE)
         {
-            sprintf(buffer, "%02d/%02d/%02d", dd, mth, yr);
+            sprintf(buffer, "%02d/%02d", mth, yr);
         }
         else
         {
             // MURICA!!
-            sprintf(buffer, "%02d/%02d/%02d", mth, dd, yr);
+            sprintf(buffer, "%02d/%02d", mth, dd, yr);
         }
 
-        tft.setTextSize(4);
         int h = tft.fontHeight();
-        tft.fillRect(0, timeY + h, 320, h, TFT_BLACK);
 
         // debug
         /*
@@ -295,13 +290,15 @@ void DrawDate()
         Serial.println(h);
         */
 
-        tft.drawString(buffer, left, timeY + 1 + h);
+        tft.fillRect(left, timeY + h, 320, h, TFT_BLACK);
+        tft.drawString(buffer, left + 4, timeY + 2 + h);
 
         int dow = weekday(local);
         String dayNames[] = {"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        sprintf(buffer, "%s %02d", dayNames[dow], dd);
         tft.setTextSize(3);
         tft.fillRect(left + DigitWidth * 5.5, timeY, DigitWidth * 3, h, TFT_BLACK);
-        tft.drawString(dayNames[dow], left + DigitWidth * 5.5, timeY + 5);
+        tft.drawString(buffer, left - 3, timeY);
 
         // debug
         /*
@@ -330,8 +327,8 @@ void rollingClockSetup(bool is24Hour, bool notUsDate)
 void drawRollingClock()
 {
     ParseDigits();
+    DrawColons();
     DrawDigitsAtOnce(); // Choose one: DrawDigitsWithoutAnimation(), DrawDigitsAtOnce(), DrawDigitsOneByOne()
     DrawDate();         // Draw Date and day of the week.
-    DrawColons();
     DrawAmPm();
 }
