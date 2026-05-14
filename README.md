@@ -2,6 +2,13 @@
 
 This project implements a rolling clock display on the ESP32 Cheap Yellow Display (CYD), enhanced with WiFi connectivity, weather information, daily Bible verses, and touch controls. It's based on the [Rolling Clock with Wifi Manager project](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/tree/main/Examples/Projects/RollingClockWithWifiManager) by Brian Lough.
 
+![weather example][weather_example] ![verse example][verse_example]
+
+[weather_example]: https://github.com/thesamu3414/CYD-Weather_and_DailyVerse/blob/main/img/weather_example.jpg "Weather example image"
+
+[verse_example]: https://github.com/thesamu3414/CYD-Weather_and_DailyVerse/blob/main/img/verse_example.jpg "Verse example image"
+
+
 ## Features
 
 - **Rolling Clock Display**: Animated rolling digits for time display
