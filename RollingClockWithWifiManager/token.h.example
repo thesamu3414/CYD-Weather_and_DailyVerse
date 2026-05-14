@@ -1,0 +1,26 @@
+#ifndef TOKEN_H
+#define TOKEN_H
+
+// Wifi
+
+#define wifiSSID "myWifiSSID"
+#define wifiPASSW "myWifiPassword"
+
+// --------------------------------------- Weather API codes
+
+#define API_KEY_OPENWEATHER "0000"
+
+#define URL_OPENWEATHER_FOREC_METRIC_5CNT "https://pro.openweathermap.org/data/2.5/forecast?lat=&lon=&units=metric&cnt=5&appid="
+
+#define URL_OPENWEATHER_CURRENT_WEATH "https://api.openweathermap.org/data/2.5/weather?lat=&lon=&units=metric&appid="
+
+// excluding minutely reports and alerts
+#define URL_OPENWEATHER_ONE_CALL_3 "https://api.openweathermap.org/data/3.0/onecall?lat=&lon=&exclude=minutely,daily,alerts&units=metric&appid="
+
+// --------------------------------------- City data
+//  Madrid -> 40.4167° N, 3.7033° W
+#define LAT_CITY "40.4167"
+#define LONG_CITY "-3.7033"
+// ---------------------------------------
+
+#endif

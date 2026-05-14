@@ -142,20 +142,8 @@ bool getdailyVerse()
 
     const String url = "https://bible-api.com/data/kjv/random/NT";
     http.begin(client, url); // Initialize HTTPClient with URL
-
-    // Attach the API token as a header
-    //http.addHeader("Authorization", String("Bearer ") + apiToken);
-
-    //Serial.print("Authorization: ");
-    //Serial.println(String("Bearer ") + apiToken);
-
-    // uncomment this line and the ex_response on the beggining of the file for debugging purposes
-    //extractVerse(ex_response);
-    //drawUnexpectedCode(111); //costum code for knowing when the example verse is showing
     
     int httpCode = http.GET(); // Perform GET request
-
-    //int httpCode = 200;
 
     // Check HTTP response code
     if (httpCode > 0) {

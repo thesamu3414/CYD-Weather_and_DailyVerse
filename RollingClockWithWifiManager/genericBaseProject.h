@@ -2,7 +2,8 @@
 // Library Defines - Need to be defined before library import
 // ----------------------------
 
-#define ESP_DRD_USE_LITTLEFS true
+#define ESP_DRD_USE_EEPROM true
+//#define DOUBLERESETDETECTOR_DEBUG true
 
 // ----------------------------
 // Standard Libraries
@@ -14,8 +15,7 @@
 
 #include <WiFi.h>
 
-#include <FS.h>
-#include "LITTLEFS.h"
+#include <LittleFS.h>
 // ----------------------------
 // Additional Libraries - each one of these will need to be installed.
 // ----------------------------
@@ -84,13 +84,6 @@ void baseProjectSetup()
 
     bool forceConfig = false;
 
-    drd = new DoubleResetDetector(DRD_TIMEOUT, DRD_ADDRESS);
-    if (drd->detectDoubleReset())
-    {
-        Serial.println(F("Forcing config mode as there was a Double reset detected"));
-        forceConfig = true;
-    }
-
     // Initialise LittleFS, if this fails try .begin(true)
     // NOTE: I believe this formats it though it will erase everything on
     // LittleFS already! In this example that is not a problem.
@@ -102,6 +95,17 @@ void baseProjectSetup()
         Serial.println("LittleFS initialisation failed!");
         while (1)
             yield(); // Stay here twiddling thumbs waiting
+    }
+
+    drd = new DoubleResetDetector(DRD_TIMEOUT, DRD_ADDRESS);
+    if (drd->detectDoubleReset())
+    {
+        Serial.println(F("Forcing config mode as there was a Double reset detected"));
+        forceConfig = true;
+    }
+    else
+    {
+        Serial.println(F("No double reset detected. Waiting for double reset for 10 seconds..."));
     }
 
     startTouchScreen();
@@ -117,12 +121,12 @@ void baseProjectSetup()
     }
 
     // While Wifi is not connected it will not progress past here
-    // setupWiFiManager(forceConfig, projectConfig, projectDisplay);
+    setupWiFiManager(forceConfig, projectConfig, projectDisplay);
 
     // Set WiFi to station mode and disconnect from an AP if it was Previously
     // connected
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(SSID_DIGI, PASSW_DIGI);
+    //WiFi.mode(WIFI_STA);
+    //WiFi.begin(wifiSSID, wifiPASSW);
 
     while (WiFi.status() != WL_CONNECTED)
     {

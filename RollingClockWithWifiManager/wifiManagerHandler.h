@@ -72,7 +72,7 @@ void setupWiFiManager(bool forceConfig, ProjectConfig &config, ProjectDisplay *t
   }
   else
   {
-    if (!wm.autoConnect("", "thesamu3414"))
+    if (!wm.autoConnect("esp32Project", "thesamu3414"))
     {
       Serial.println("failed to connect and hit timeout");
       delay(3000);

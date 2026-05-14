@@ -34,8 +34,8 @@ bool requestOpenWeather(bool curr, bool forec, bool oneCall)
       fullURL = URL_OPENWEATHER_ONE_CALL_3;
     }
     
-    fullURL.replace("lat=&", "lat=" + String(LAT_GIJON) + "&");
-    fullURL.replace("lon=&", "lon=" + String(LONG_GIJON) + "&");
+    fullURL.replace("lat=&", "lat=" + String(LAT_CITY) + "&");
+    fullURL.replace("lon=&", "lon=" + String(LONG_CITY) + "&");
     fullURL.replace("appid=", "appid=" + String(API_KEY_OPENWEATHER));
 
     Serial.printf("weather::requestOpenWeather - fullURL: ");
