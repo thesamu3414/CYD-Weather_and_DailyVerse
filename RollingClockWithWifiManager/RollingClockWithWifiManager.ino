@@ -43,7 +43,9 @@ void setup()
 
 
 unsigned long lastUpdateTime = 0;
-const int updateInterval = 1000;
+unsigned long lastScreenChangeTime = 0;
+const int updateInterval = 2000;                   // 2 secs
+const unsigned long screenChangeInterval = 300000; // 5 mins
 bool first = true;
 
 void loop()
@@ -59,23 +61,30 @@ void loop()
         first = false;
         Serial.println("Entering first time");
         drawRollingClock();
-        //drawBibleVerseScreen(true);
-        drawWeatherScreen(true);
+        drawBibleVerseScreen(true);
+        requestWeather();
 
         wDay =  myTZ.weekday();
     }
     else if (currentTime - lastUpdateTime >= updateInterval)
     {
+        lastUpdateTime = currentTime;
+
         if (minuteChanged() )
         {
             Serial.println("Minute change");
             drawRollingClock();
 
-            if(currentScreen == SCREEN_WEATHER && 
-                (myTZ.minute() == 30 || myTZ.minute() == 0))
+            if(myTZ.minute() == 30 || myTZ.minute() == 0)
             {
-                //drawdailyVerse();
-                drawWeatherScreen(true);
+                if(currentScreen == SCREEN_WEATHER)
+                {
+                    drawWeatherScreen(true);
+                }
+                else
+                {
+                    requestWeather();
+                }
             }
         }
         else if (dayChanged())
@@ -83,19 +92,25 @@ void loop()
             Serial.println("Day change");
             if(currentScreen == SCREEN_BIBLE_VERSE)
             {
-                //drawdailyVerse();
                 drawBibleVerseScreen(true);
+                requestWeather();
             }
             else if (currentScreen == SCREEN_WEATHER)
             {
                 drawWeatherScreen(true);
+                getdailyVerse();
             }
+        }
+        if (currentTime - lastScreenChangeTime >= screenChangeInterval)
+        {
+            lastScreenChangeTime = currentTime;
+            navigateRight();
         }
     }
 
-    checkTouchForNavigation();
-    /*
-    Serial.print(" outside - Free heap memory: ");
-    Serial.print(ESP.getFreeHeap());
-    Serial.println(" bytes");*/
+    checkTouchForNavigation(lastScreenChangeTime);
+    
+    //Serial.print(" outside - Free heap memory: ");
+    //Serial.print(ESP.getFreeHeap());
+    //Serial.println(" bytes");
 }

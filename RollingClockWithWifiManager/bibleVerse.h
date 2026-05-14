@@ -238,7 +238,7 @@ void drawVerse()
   int startIndex = 0;
   int spaceIndex;
 
-  tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, height - 110, TFT_BLACK);
+  tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, 240, TFT_BLACK);
 
   tft.drawLine(0, SCREEN_Y_TIMEDATE , 340, SCREEN_Y_TIMEDATE, 0xFFFF);
 

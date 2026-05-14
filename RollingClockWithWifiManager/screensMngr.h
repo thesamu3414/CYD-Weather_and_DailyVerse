@@ -59,25 +59,17 @@ void drawNavigationArrows() {
 void drawWeatherScreen(const bool &forceRequest) {
   currentScreen = SCREEN_WEATHER;
   //tft.fillScreen(TFT_BLACK);
-  tft.fillRect(0, 71, 320, 240, TFT_BLACK);
-  tft.setTextColor(TFT_WHITE);
+  //tft.fillRect(0, 71, 320, 240, TFT_BLACK);
+  //tft.setTextColor(TFT_WHITE);
   //tft.drawString("Weather Today", 110, 115);
 
   // draw weather data...
   drawWeatherInfo(forceRequest);
-
-  //drawNavigationArrows();
 }
 
 void drawBibleVerseScreen(const bool &forceRequest) {
   currentScreen = SCREEN_BIBLE_VERSE;
-  //tft.fillScreen(TFT_BLACK);
-  tft.fillRect(0, 71, 320, 240, TFT_BLACK);
-  tft.setTextColor(TFT_WHITE);
-
   drawdailyVerse(forceRequest);
-
-  //drawNavigationArrows();
 }
 
 void navigateLeft() {
@@ -101,16 +93,17 @@ void navigateRight() {
   }
 }
 
-void checkTouchForNavigation() {
+void checkTouchForNavigation(unsigned long &lastScreenChangeTime) {
   if (ts.tirqTouched() && ts.touched()) {
 
     TS_Point p = getRemapedPoint(ts);
 
-    printTouchToDisplay(p);
+    //printTouchToDisplay(p);
 
     // Bottom part of screen touched
     if (p.y > 90 ) {
       navigateRight();
+      lastScreenChangeTime = millis(); // Reset the screen change timer on touch
     }
 
     delay(100);
