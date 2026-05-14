@@ -132,18 +132,40 @@ const unsigned char wea_icon_thunderstorm [] PROGMEM = {
 };
 
 // Array of all bitmaps for convenience. (Total bytes used to store images in PROGMEM = 4416)
-const int wea_icon_allArray_LEN = 12;
-const unsigned char* wea_icon_allArray[12] = {
-	wea_icon_sun,
-	wea_icon_full_moon,
-	wea_icon_moon,
-	wea_icon_moon_half_c,
-	wea_icon_moon_half_d,
-	wea_icon_cloud_sun,
-	wea_icon_cloud_moon,
-	wea_icon_cloud,
-	wea_icon_rain,
-	wea_icon_thunderstorm,
-	wea_icon_snow,
-	wea_icon_mist
+struct WeaIcon {
+    const unsigned char* bitmap;
+    uint16_t color;
 };
+const int wea_icon_allArray_LEN = 12;
+const WeaIcon wea_icon_allArray[12] = {
+    { wea_icon_sun,         0xFDA0 },  // 0 - orange
+    { wea_icon_full_moon,   0xD69A },  // 1 - light grey
+    { wea_icon_moon,        0xD69A },  // 2 - light grey
+    { wea_icon_moon_half_c, 0xD69A },  // 3 - light grey
+    { wea_icon_moon_half_d, 0xD69A },  // 4 - light grey
+    { wea_icon_cloud_sun,   0xFFE0 },  // 5 - yellow
+    { wea_icon_cloud_moon,  0x867D },  // 6 - sky blue
+    { wea_icon_cloud,       0x867D },  // 7 - sky blue
+    { wea_icon_rain,        0x001F },  // 8 - blue
+    { wea_icon_thunderstorm,0xFE19 },  // 9 - pink
+    { wea_icon_snow,        0xFFFF },  // 10 - white
+    { wea_icon_mist,        0x7BEF }   // 11 - light grey
+};
+
+int getWeatherIcon_equivalent(const String &iconName) {
+    int code = iconName.substring(0, 2).toInt(); // "01d" → 1, "03n" → 3
+    bool isDay = iconName.endsWith("d");
+
+	switch (code) {
+        case 1:  return isDay ? 0 : 1;   // sun / full_moon
+        case 2:  return isDay ? 5 : 6;   // cloud_sun / cloud_moon
+        case 3:
+        case 4:  return 7;               // cloud
+        case 9:  return 8;               // rain
+        case 10: return 8;               // rain
+        case 11: return 9;               // thunderstorm
+        case 13: return 10;              // snow
+        case 50: return 11;              // mist
+        default: return -1;              // not found
+    }
+}

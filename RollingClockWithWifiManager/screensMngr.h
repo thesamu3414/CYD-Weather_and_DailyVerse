@@ -56,24 +56,26 @@ void drawNavigationArrows() {
   drawNavigationRightArrow();
 }
 
-void drawWeatherScreen() {
+void drawWeatherScreen(const bool &forceRequest) {
+  currentScreen = SCREEN_WEATHER;
   //tft.fillScreen(TFT_BLACK);
-  tft.fillRect(0, 90, 320, tft.height() - 110, TFT_BLACK);
+  tft.fillRect(0, 71, 320, 240, TFT_BLACK);
   tft.setTextColor(TFT_WHITE);
   //tft.drawString("Weather Today", 110, 115);
 
   // draw weather data...
-  drawWeatherInfo();
+  drawWeatherInfo(forceRequest);
 
   //drawNavigationArrows();
 }
 
-void drawBibleVerseScreen() {
+void drawBibleVerseScreen(const bool &forceRequest) {
+  currentScreen = SCREEN_BIBLE_VERSE;
   //tft.fillScreen(TFT_BLACK);
-  tft.fillRect(0, SCREEN_Y_TIMEDATE, 320, tft.height() - 70, TFT_BLACK);
+  tft.fillRect(0, 71, 320, 240, TFT_BLACK);
   tft.setTextColor(TFT_WHITE);
 
-  drawdailyVerse();
+  drawdailyVerse(forceRequest);
 
   //drawNavigationArrows();
 }
@@ -81,25 +83,21 @@ void drawBibleVerseScreen() {
 void navigateLeft() {
   if (currentScreen == SCREEN_BIBLE_VERSE) 
   {
-    currentScreen = SCREEN_WEATHER;
-    drawWeatherScreen();
+    drawWeatherScreen(false);
   }
   else if (currentScreen == SCREEN_WEATHER)
   {
-    currentScreen = SCREEN_BIBLE_VERSE;
-    drawBibleVerseScreen();
+    drawBibleVerseScreen(false);
   }
 }
 
 void navigateRight() {
   if (currentScreen == SCREEN_WEATHER) {
-    currentScreen = SCREEN_BIBLE_VERSE;
-    drawBibleVerseScreen();
+    drawBibleVerseScreen(false);
   }
   else if (currentScreen == SCREEN_BIBLE_VERSE) 
   {
-    currentScreen = SCREEN_WEATHER;
-    drawWeatherScreen();
+    drawWeatherScreen(false);
   }
 }
 

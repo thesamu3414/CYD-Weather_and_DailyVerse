@@ -44,6 +44,7 @@ void setup()
 
 unsigned long lastUpdateTime = 0;
 const int updateInterval = 1000;
+bool first = true;
 
 void loop()
 {
@@ -55,12 +56,13 @@ void loop()
 
     if (first)
     {
+        first = false;
         Serial.println("Entering first time");
         drawRollingClock();
-        drawBibleVerseScreen();
+        //drawBibleVerseScreen(true);
+        drawWeatherScreen(true);
 
         wDay =  myTZ.weekday();
-        first = false;
     }
     else if (currentTime - lastUpdateTime >= updateInterval)
     {
@@ -73,21 +75,20 @@ void loop()
                 (myTZ.minute() == 30 || myTZ.minute() == 0))
             {
                 //drawdailyVerse();
-                drawWeatherScreen();
+                drawWeatherScreen(true);
             }
         }
         else if (dayChanged())
         {
             Serial.println("Day change");
-            daychanged = true;
             if(currentScreen == SCREEN_BIBLE_VERSE)
             {
                 //drawdailyVerse();
-                drawBibleVerseScreen();
+                drawBibleVerseScreen(true);
             }
             else if (currentScreen == SCREEN_WEATHER)
             {
-                drawWeatherScreen();
+                drawWeatherScreen(true);
             }
         }
     }

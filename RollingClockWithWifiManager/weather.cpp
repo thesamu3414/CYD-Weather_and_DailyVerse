@@ -5,7 +5,7 @@
 
 #include "token.h"  // Add this line
 
-bool firstWeatherRequest = true;
+bool weHaveWeatherInfo = false;
 
 bool requestOpenWeather(bool curr, bool forec, bool oneCall)
 {
@@ -59,19 +59,19 @@ bool requestOpenWeather(bool curr, bool forec, bool oneCall)
         {
           WeatherCurrent& current =
             WeatherCurrent::getInstance();
-          current.parseJson(stream);
+          getSuccess = current.parseJson(stream);
         }
         else if (forec)
         {
           WeatherForecast& forecast =
             WeatherForecast::getInstance();
-          forecast.parseJson(stream);
+          getSuccess = forecast.parseJson(stream);
         }
         else if (oneCall)
         {
           Weather_OneCall_3_0& oneCall_3_0 =
             Weather_OneCall_3_0::getInstance();
-          oneCall_3_0.parseJson(stream);
+          getSuccess = oneCall_3_0.parseJson(stream);
         }
 
       } else {
@@ -92,6 +92,8 @@ bool requestOpenWeather(bool curr, bool forec, bool oneCall)
     Serial.println("Wi-Fi not connected");
     getSuccess = false;
   }
+
+  weHaveWeatherInfo = getSuccess;
 
   return getSuccess;
 }
@@ -155,10 +157,10 @@ bool Weather_OneCall_3_0::parseJson(WiFiClient* stream)
       JsonArray weatherArray = currentJSON["weather"];
       for (JsonObject w : weatherArray) {
         weather_descrip condition;
-        condition.r_id = w["weather"]["r_id"];
-        condition.r_main = w["weather"]["r_main"].as<String>();
-        condition.r_description = w["weather"]["r_description"].as<String>();
-        condition.r_icon = w["weather"]["r_icon"].as<String>();
+        condition.r_id = w["id"];
+        condition.r_main = w["main"].as<String>();
+        condition.r_description = w["description"].as<String>();
+        condition.r_icon = w["icon"].as<String>();
 
         current.weather.push_back(condition);
       }
@@ -211,10 +213,10 @@ bool Weather_OneCall_3_0::parseJson(WiFiClient* stream)
         JsonArray weatherArray = item["weather"];
         for (JsonObject w : weatherArray) {
           weather_descrip condition;
-          condition.r_id = w["weather"]["r_id"];
-          condition.r_main = w["weather"]["r_main"].as<String>();
-          condition.r_description = w["weather"]["r_description"].as<String>();
-          condition.r_icon = w["weather"]["r_icon"].as<String>();
+          condition.r_id = w["id"];
+          condition.r_main = w["main"].as<String>();
+          condition.r_description = w["description"].as<String>();
+          condition.r_icon = w["icon"].as<String>();
 
           entry.weather.push_back(condition);
         }
@@ -286,10 +288,10 @@ bool Weather_OneCall_3_0::parseJson(WiFiClient* stream)
         JsonArray weatherArray = item["weather"];
         for (JsonObject w : weatherArray) {
           weather_descrip condition;
-          condition.r_id = w["weather"]["r_id"];
-          condition.r_main = w["weather"]["r_main"].as<String>();
-          condition.r_description = w["weather"]["r_description"].as<String>();
-          condition.r_icon = w["weather"]["r_icon"].as<String>();
+          condition.r_id = w["id"];
+          condition.r_main = w["main"].as<String>();
+          condition.r_description = w["description"].as<String>();
+          condition.r_icon = w["icon"].as<String>();
 
           entry.weather.push_back(condition);
         }
@@ -496,6 +498,7 @@ void Weather_OneCall_3_0::printSummary()
       Serial.printf("    Wind: %.1f m/s\n\n", current.wind_speed);
       Serial.printf("    Rain?: %d \n\n", current.rain_exists);
       Serial.printf("    Snow?: %d \n\n", current.snow_exists);
+      Serial.printf("    icon: %s \n\n", current.weather[0].r_icon.c_str());
     }
 
     if(exists_hourly)
@@ -516,6 +519,7 @@ void Weather_OneCall_3_0::printSummary()
       Serial.printf("    Pop: %.1f m/s\n\n", hourly[0].pop);
       Serial.printf("    Rain?: %d \n\n", hourly[0].rain_exists);
       Serial.printf("    Snow?: %d \n\n", hourly[0].snow_exists);
+      Serial.printf("    icon: %s \n\n", hourly[0].weather[0].r_icon.c_str());
     }
 
     if(exists_daily)
@@ -579,16 +583,135 @@ void requestWeather()
   requestOpenWeather(false,false,true);
 }
 
+void unixToHHMM(int &unixTime, short &timezoneOffset, int &hours, int &minutes) {
+    int localTime = unixTime + timezoneOffset;
+    hours   = (localTime % 86400) / 3600;
+    minutes = (localTime % 3600) / 60;
+
+    char buffer[6];
+    snprintf(buffer, sizeof(buffer), "%02d:%02d", hours, minutes);
+}
+
+int drawTime(int x, int y, int hour, int minutes, int font_size)
+{
+  char buffer[6];
+  memset(buffer,0,sizeof(buffer));
+
+  tft.setTextColor(0xFFFF);
+  tft.setTextSize(font_size);
+
+  // hour
+  sprintf(buffer, " %02d", hour);
+  tft.drawString(buffer, x, y);
+  int hourTextWidth = tft.textWidth(buffer);
+  //// "h""
+  tft.setTextSize(2);
+  tft.drawString("h", x + hourTextWidth -1, y+7);
+  hourTextWidth += tft.textWidth("h")-1; // Update total width
+
+  //// colon
+  //tft.setTextSize(2);
+  //tft.drawString(":", x + hourTextWidth -3, y+5);
+  //hourTextWidth += tft.textWidth(":")-5; // Update total width
+  //// minutes
+  //tft.setTextSize(font_size);
+  //sprintf(buffer, "%02d", minutes);
+  //tft.drawString(buffer, x + hourTextWidth, y);
+  //hourTextWidth += tft.textWidth(buffer);
+
+  return hourTextWidth;
+}
+
+int drawTemperature(int x, int y, int degrees, int decimals, int font_size)
+{
+  char buffer[6];
+  memset(buffer,0,sizeof(buffer));
+
+  tft.setTextSize(font_size);
+  tft.setTextColor(0x03E0);
+
+  x += 2;
+  y += 2 + tft.fontHeight();
+
+  // int part
+  sprintf(buffer, "%d", degrees);
+  tft.drawString(buffer, x, y);
+  int tempTextWidth = tft.textWidth(buffer);
+  int tempTextHeight = tft.fontHeight();
+  // decimal dot
+  tft.setTextSize(font_size-1);
+  tft.drawString(".", x + tempTextWidth-3, y + 5);
+  tempTextWidth += tft.textWidth(".")-3; // Update total width
+  // decimal part
+  memset(buffer,0,sizeof(buffer));
+  tft.setTextSize(font_size);
+  sprintf(buffer, "%d", decimals);
+  tft.drawString(buffer, x + tempTextWidth, y);
+  tempTextWidth += tft.textWidth(buffer); // Update total width
+  
+  // degrees character
+  tft.setTextSize(font_size-2);
+  tft.drawString("o", x + tempTextWidth, y - 3);
+  tempTextWidth += tft.textWidth(buffer); // Update total width
+
+  return tempTextWidth;
+}
+
+
+int margin = 5;
+int weatherScreen_Y = 71; // horizontal line separating clock and weather info
+int temp_X = 5;
+int temp_Y = weatherScreen_Y + margin;
+
+void drawWeatherForecast_Hourly()
+{
+  Weather_OneCall_3_0& oneCall = Weather_OneCall_3_0::getInstance();
+ 
+  char buffer[10];
+  memset(buffer,0,sizeof(buffer));
+  
+  int temp_font_size = 7;
+  int hourforecast_font_size = 3;
+  
+
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextFont(1);
+
+  tft.setTextSize(temp_font_size);
+  int charHeigth = tft.fontHeight();
+
+  int forecast_X = temp_X + 4;
+  int forecast_Y = temp_Y + charHeigth + 13;
+  
+  tft.drawLine(temp_X-3, forecast_Y - 13 , temp_X-3, 240, 0xFFFF);
+
+  int step = 3;
+  for (int i = 1; i <= 1 + 3*step; i += step)
+  {  // Hour -------------------------------
+    int hour, minutes;
+    unixToHHMM(oneCall.hourly[i].dt, oneCall.timezone_offset, hour, minutes);
+    int hourTextWidth = drawTime(forecast_X, forecast_Y, hour, minutes, hourforecast_font_size);
+
+    // temperature ------------------------
+    int intPart     = (int)oneCall.hourly[i].temp;
+    int decimalPart = (int)((oneCall.hourly[i].temp - intPart) * 10); 
+    int tempTextWidth = drawTemperature(forecast_X, forecast_Y, intPart, decimalPart, hourforecast_font_size);
+
+    // Weather icon ------------------------
+    int iconCode = getWeatherIcon_equivalent(oneCall.hourly[i].weather[0].r_icon);
+    if(iconCode >= 0)
+    {
+      tft.drawBitmap(forecast_X + 20, 240 - 40, wea_icon_allArray[iconCode].bitmap, 30, 30, 0x0000, wea_icon_allArray[iconCode].color);
+    }
+
+    tft.drawLine(forecast_X + tempTextWidth + 6, forecast_Y - 13 , forecast_X + tempTextWidth + 6, 240, 0xFFFF);
+    forecast_X += tempTextWidth + 9;
+  }
+}
+
 void drawWeather()
 {
-  Weather_OneCall_3_0& oneCall =
-          Weather_OneCall_3_0::getInstance();
-
-  
-  int margin = 5;
-  int weatherScreen_Y = 71; // horizontal line separating clock and weather info
-  int temp_X = 5;
-  int temp_Y = weatherScreen_Y + margin;
+  Weather_OneCall_3_0& oneCall = Weather_OneCall_3_0::getInstance();
 
   int temp_font_size = 7;
 
@@ -602,10 +725,6 @@ void drawWeather()
 
   // Print black weather part screen
   tft.fillRect(0,240 - tft.fontHeight(), weatherScreen_Y, tft.fontHeight(), TFT_BLACK);
-  Serial.print("weather::drawWeather() - temp: ");
-  Serial.println(oneCall.current.temp);
-
-  oneCall.printSummary();
 
   tft.drawLine(0, weatherScreen_Y , 340, weatherScreen_Y, 0xFFFF);
   tft.drawLine(0, temp_Y + charHeigth, 340, temp_Y + charHeigth, 0xFFFF);
@@ -660,23 +779,11 @@ void drawWeather()
   tempTextWidth += tft.textWidth(buffer); // Update total width
 
   // Weather icon
-  tft.drawBitmap(tempTextWidth + 5, temp_Y, wea_icon_sun, 30, 30, 0x0000, 0xFDA0);
-
-  tft.drawBitmap(0, temp_Y + charHeigth + 5, wea_icon_allArray[0], 30, 30, 0x0000, 0xFDA0);
-  tft.drawBitmap(30, temp_Y + charHeigth + 5, wea_icon_allArray[1], 30, 30, 0x0000, 0xD69A);
-  tft.drawBitmap(60, temp_Y + charHeigth + 5, wea_icon_allArray[2], 30, 30, 0x0000, 0xD69A);
-  tft.drawBitmap(90, temp_Y + charHeigth + 5, wea_icon_allArray[3], 30, 30, 0x0000, 0xD69A);
-  tft.drawBitmap(120, temp_Y + charHeigth + 5, wea_icon_allArray[4], 30, 30, 0x0000, 0xD69A);
-  tft.drawBitmap(150, temp_Y + charHeigth + 5, wea_icon_allArray[5], 30, 30, 0x0000, 0xFFE0);
-  tft.drawBitmap(180, temp_Y + charHeigth + 5, wea_icon_allArray[6], 30, 30, 0x0000, 0x867D);
-  tft.drawBitmap(210, temp_Y + charHeigth + 5, wea_icon_allArray[7], 30, 30, 0x0000, 0x867D);
-  tft.drawBitmap(240, temp_Y + charHeigth + 5, wea_icon_allArray[8], 30, 30, 0x0000, 0x001F);
-  tft.drawBitmap(270, temp_Y + charHeigth + 5, wea_icon_allArray[9], 30, 30, 0x0000, 0xFEA0);
-
-  tft.drawBitmap(0, temp_Y + charHeigth + 35, wea_icon_allArray[10], 30, 30, 0x0000, 0xFFFF);
-  tft.drawBitmap(30, temp_Y + charHeigth + 35, wea_icon_allArray[11], 30, 30, 0x0000, 0x7BEF);
-
-
+  int iconCode = getWeatherIcon_equivalent(oneCall.current.weather[0].r_icon);
+  if(iconCode >= 0)
+  {
+    tft.drawBitmap(tempTextWidth + 5, temp_Y, wea_icon_allArray[iconCode].bitmap, 30, 30, 0x0000, wea_icon_allArray[iconCode].color);
+  }
 
   memset(buffer,0,sizeof(buffer));
   
@@ -690,19 +797,12 @@ void drawWeather()
   tft.setTextSize(3);
   tft.drawString("%", 340 - humTextWidth, temp_Y + charHeigth - tft.fontHeight() - 3);
 
-  //drawWeatherForecast_Hourly();
+  drawWeatherForecast_Hourly();
 }
 
-void drawWeatherInfo()
+void drawWeatherInfo(const bool &forceRequest)
 {
-    if(firstWeatherRequest)
-    {
-      firstWeatherRequest = false;
-
-      Serial.println("weather::drawWeatherInfo - FIRST TIME requesting OW forecast.");
-      requestWeather();
-    }
-    else if (myTZ.minute() == 30 || myTZ.minute() == 0) 
+    if(forceRequest || !weHaveWeatherInfo) 
     {
       Serial.println("weather::drawWeatherInfo - requesting OW forecast.");
       requestWeather();
