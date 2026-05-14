@@ -309,12 +309,10 @@ void drawNumbApiRequests(int numReqsts)
   tft.drawString(buffer, 0, 240 - tft.fontHeight());
 }
 
-void drawdailyVerse()
+void drawdailyVerse(const bool &forceRequest)
 {
-  if(first || daychanged)
+  if(forceRequest)
   {
-    daychanged = false;
-    
     // we try to get a new verse, if this fails and we have
     // one saved, draw that one and show error http code
     if(getdailyVerse() || weHaveVerse)

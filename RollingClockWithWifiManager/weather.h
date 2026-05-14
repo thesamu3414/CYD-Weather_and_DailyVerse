@@ -339,6 +339,6 @@ bool requestOpenWeather(bool curr, bool forec, bool oneCall);
 
 void requestWeather();
 
-void drawWeatherInfo();
+void drawWeatherInfo(const bool &forceRequest);
 
 #endif
