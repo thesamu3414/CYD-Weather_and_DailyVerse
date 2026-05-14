@@ -723,8 +723,8 @@ void drawWeather()
   char buffer[10];
   memset(buffer,0,sizeof(buffer));
 
-  // Print black weather part screen
-  tft.fillRect(0,240 - tft.fontHeight(), weatherScreen_Y, tft.fontHeight(), TFT_BLACK);
+  // Print black weather screen part
+  tft.fillRect(0,weatherScreen_Y, 320, 240, TFT_BLACK);
 
   tft.drawLine(0, weatherScreen_Y , 340, weatherScreen_Y, 0xFFFF);
   tft.drawLine(0, temp_Y + charHeigth, 340, temp_Y + charHeigth, 0xFFFF);
