@@ -75,7 +75,7 @@ void loop()
             Serial.println("Minute change");
             drawRollingClock();
 
-            if(myTZ.minute() == 30 || myTZ.minute() == 0)
+            if(myTZ.minute() % 10 == 0)
             {
                 if(currentScreen == SCREEN_WEATHER)
                 {
