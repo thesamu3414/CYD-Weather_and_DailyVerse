@@ -145,7 +145,7 @@ const WeaIcon wea_icon_allArray[12] = {
     { wea_icon_moon_half_d, 0xD69A },  // 4 - light grey
     { wea_icon_cloud_sun,   0xFFE0 },  // 5 - yellow
     { wea_icon_cloud_moon,  0x867D },  // 6 - sky blue
-    { wea_icon_cloud,       0x867D },  // 7 - sky blue
+    { wea_icon_cloud,       0x7BEF },  // 7 - sky blue
     { wea_icon_rain,        0x001F },  // 8 - blue
     { wea_icon_thunderstorm,0xFE19 },  // 9 - pink
     { wea_icon_snow,        0xFFFF },  // 10 - white
