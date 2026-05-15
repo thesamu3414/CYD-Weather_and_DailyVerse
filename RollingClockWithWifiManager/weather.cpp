@@ -148,11 +148,12 @@ bool Weather_OneCall_3_0::parseJson(WiFiClient* stream)
       }
 
       current.snow_exists = currentJSON.containsKey("snow");
-      if(current.rain_exists)
+      if(current.snow_exists)
       {
         current.snow.r_one_hour = currentJSON["snow"]["1h"];
       }
       
+      current.weather.clear();
       // Weather conditions
       JsonArray weatherArray = currentJSON["weather"];
       for (JsonObject w : weatherArray) {
@@ -204,7 +205,7 @@ bool Weather_OneCall_3_0::parseJson(WiFiClient* stream)
         }
 
         entry.snow_exists = item.containsKey("snow_exists");
-        if(entry.rain_exists)
+        if(entry.snow_exists)
         {
           entry.snow.r_one_hour = item["snow"]["1h"];
         }
@@ -279,7 +280,7 @@ bool Weather_OneCall_3_0::parseJson(WiFiClient* stream)
         }
 
         entry.snow_exists = item.containsKey("snow");
-        if(entry.rain_exists)
+        if(entry.snow_exists)
         {
           entry.snow = item["snow"];
         }
@@ -780,10 +781,13 @@ void drawWeather()
   tempTextWidth += tft.textWidth(buffer); // Update total width
 
   // Weather icon
-  int iconCode = getWeatherIcon_equivalent(oneCall.current.weather[0].r_icon);
-  if(iconCode >= 0)
+  if (!oneCall.current.weather.empty())
   {
-    tft.drawBitmap(tempTextWidth + 5, temp_Y, wea_icon_allArray[iconCode].bitmap, 30, 30, 0x0000, wea_icon_allArray[iconCode].color);
+    int iconCode = getWeatherIcon_equivalent(oneCall.current.weather[0].r_icon);
+    if(iconCode >= 0)
+    {
+      tft.drawBitmap(tempTextWidth + 5, temp_Y, wea_icon_allArray[iconCode].bitmap, 30, 30, 0x0000, wea_icon_allArray[iconCode].color);
+    }
   }
 
   memset(buffer,0,sizeof(buffer));
