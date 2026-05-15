@@ -228,9 +228,9 @@ void DrawDigitsWithoutAnimation()
 void DrawDigitsOneByOne()
 {
     tft.setTextDatum(TL_DATUM);
-    for (size_t i = 0; i < 6; i++)
+    for (size_t i = 0; i < 4; i++)
     {
-        DrawADigit(digs[5 - i]);
+        DrawADigit(digs[3 - i]);
     }
 }
 

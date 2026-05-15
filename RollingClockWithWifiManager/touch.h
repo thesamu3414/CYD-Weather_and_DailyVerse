@@ -117,14 +117,14 @@ TS_Point getRemapedPoint(XPT2046_Touchscreen &touchscreen)
   return p;
 }
 
-void checkAndDrawTouch()
-{
-  if (ts.tirqTouched() && ts.touched())
-  {
-      TS_Point p = getRemapedPoint(ts);
-
-      printTouchToSerial(p);
-      printTouchToDisplay(p);
-      delay(50);
-  }
-}
+//void checkAndDrawTouch()
+//{
+//  if (ts.tirqTouched() && ts.touched())
+//  {
+//      TS_Point p = getRemapedPoint(ts);
+//
+//      printTouchToSerial(p);
+//      printTouchToDisplay(p);
+//      delay(50);
+//  }
+//}

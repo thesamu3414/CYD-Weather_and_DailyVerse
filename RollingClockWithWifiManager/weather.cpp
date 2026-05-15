@@ -634,7 +634,8 @@ int drawTemperature(int x, int y, int degrees, int decimals, int font_size)
   y += 2 + tft.fontHeight();
 
   // int part
-  sprintf(buffer, "%d", degrees);
+  if (degrees >= 10) {sprintf(buffer, "%d", degrees);}
+  else {sprintf(buffer, " %d", degrees);} // Add space for alignment if single digit
   tft.drawString(buffer, x, y);
   int tempTextWidth = tft.textWidth(buffer);
   int tempTextHeight = tft.fontHeight();
