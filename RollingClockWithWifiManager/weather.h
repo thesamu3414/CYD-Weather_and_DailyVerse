@@ -77,6 +77,29 @@ struct weather_main_3_0_current
     bool              snow_exists;
     precipitation_3_0 snow;
     std::vector<weather_descrip> weather;
+
+    void clear()
+    {
+        dt = 0;
+        sunrise = 0;
+        sunset = 0;
+        temp = 0.0f;
+        feels_like = 0.0f;
+        pressure = 0;
+        humidity = 0;
+        dew_point = 0.0f;
+        uvi = 0.0f;
+        clouds = 0;
+        visibility = 0;
+        wind_speed = 0.0f;
+        wind_deg = 0;
+        wind_gust = 0.0f;
+        rain_exists = false;
+        rain.r_one_hour = 0.0f;
+        snow_exists = false;
+        snow.r_one_hour = 0.0f;
+        weather.clear();
+    }
 };
 
 struct weather_main_3_0_hourly
@@ -183,6 +206,7 @@ public:
     // Clear/reset data
     void clear() {
         exists_current = false;
+        current.clear();
         exists_hourly  = false;
         hourly.clear();
         exists_daily   = false;
